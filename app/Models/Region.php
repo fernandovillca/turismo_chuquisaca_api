@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Region extends Model
 {
@@ -16,15 +17,21 @@ class Region extends Model
         'is_active' => 'boolean',
     ];
 
-    // Mutator para guardar el nombre en minúsculas
     protected function setNameAttribute($value): void
     {
         $this->attributes['name'] = strtolower($value);
     }
 
-    // Mutator para guardar la descripción en minúsculas
     protected function setDescriptionAttribute($value): void
     {
         $this->attributes['description'] = $value ? strtolower($value) : null;
+    }
+
+    /**
+     * Relación: Una región tiene muchos municipios
+     */
+    public function municipalities(): HasMany
+    {
+        return $this->hasMany(Municipality::class);
     }
 }
