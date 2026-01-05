@@ -13,7 +13,7 @@ class UpdateRegionRequest extends ApiFormRequest
 
     public function rules(): array
     {
-        $regionId = $this->route('region')->id;
+        $regionId = $this->route('region');
 
         return [
             'name' => 'sometimes|string|max:100|unique:regions,name,' . $regionId,

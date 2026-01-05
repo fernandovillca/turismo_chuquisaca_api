@@ -9,32 +9,45 @@ use App\Http\Requests\Api\V1\UpdateRegionRequest;
 use App\Http\Resources\Api\V1\RegionCollection;
 use App\Http\Resources\Api\V1\RegionResource;
 use App\Models\Region;
+use App\Services\Api\V1\RegionService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RegionController extends Controller
 {
-    public function index(Request $request): RegionCollection
+    protected RegionService $regionService;
+
+    public function __construct(RegionService $regionService)
     {
-        $perPage = min($request->input('per_page', 10), 100);
+        $this->regionService = $regionService;
+    }
 
-        $regions = Region::paginate($perPage);
+    public function index(Request $request)
+    {
+        try {
+            $perPage = min($request->input('per_page', 10), 100);
 
-        return (new RegionCollection($regions))
-            ->additional([
-                'message' => 'Regions retrieved successfully',
-                'status_code' => 200
-            ]);
+            $regions = $this->regionService->getAllRegions($perPage);
+
+            return (new RegionCollection($regions))
+                ->additional([
+                    'message' => 'Regiones obtenidas exitosamente',
+                    'status_code' => 200
+                ]);
+        } catch (Exception $e) {
+            return ApiResponse::error('Error al obtener las regiones', $e->getMessage(), 500);
+        }
     }
 
     public function store(StoreRegionRequest $request): JsonResponse
     {
         try {
-            $region = Region::create($request->validated());
+            $region = $this->regionService->createRegion($request->validated());
 
             return (new RegionResource($region))
                 ->additional([
-                    'message' => 'Region created successfully',
+                    'message' => 'Región creada exitosamente',
                     'status_code' => 201
                 ])
                 ->response()
@@ -44,23 +57,35 @@ class RegionController extends Controller
         }
     }
 
-    public function show(Region $region): RegionResource
-    {
-        return (new RegionResource($region))
-            ->additional([
-                'message' => 'Region retrieved successfully',
-                'status_code' => 200
-            ]);
-    }
-
-    public function update(UpdateRegionRequest  $request, Region $region): JsonResponse
+    public function show(int $id)
     {
         try {
-            $region->update($request->validated());
+            $region = $this->findRegionOrFail($id);
+
+            if ($region instanceof JsonResponse) return $region;
 
             return (new RegionResource($region))
                 ->additional([
-                    'message' => 'Region updated successfully',
+                    'message' => 'Región obtenida exitosamente',
+                    'status_code' => 200
+                ]);
+        } catch (Exception $e) {
+            return ApiResponse::error('Error al obtener la región', $e->getMessage(), 500);
+        }
+    }
+
+    public function update(UpdateRegionRequest  $request, int $id)
+    {
+        try {
+            $region = $this->findRegionOrFail($id);
+
+            if ($region instanceof JsonResponse) return $region;
+
+            $updatedRegion = $this->regionService->updateRegion($region, $request->validated());
+
+            return (new RegionResource($updatedRegion))
+                ->additional([
+                    'message' => 'Región actualizada exitosamente',
                     'status_code' => 200
                 ])
                 ->response();
@@ -69,17 +94,32 @@ class RegionController extends Controller
         }
     }
 
-    public function destroy(Region $region): JsonResponse
+    public function destroy(Int $id): JsonResponse
     {
         try {
-            $region->delete();
+            $region = $this->regionService->getRegionById($id);
+
+            if (!$region) return ApiResponse::notFound('La región con ID ' . $id . ' no existe');
+
+            $this->regionService->deleteRegion($region);
 
             return response()->json([
                 'status_code' => 200,
-                'message' => 'Region deleted successfully'
+                'message' => 'Región eliminada exitosamente'
             ]);
         } catch (\Exception $e) {
             return ApiResponse::conflict('No se puede eliminar la región porque tiene registros relacionados');
         }
+    }
+
+    private function findRegionOrFail(int $id): Region|JsonResponse
+    {
+        $region = $this->regionService->getRegionById($id);
+
+        if (!$region) {
+            return ApiResponse::notFound('La región con ID ' . $id . ' no existe');
+        }
+
+        return $region;
     }
 }
