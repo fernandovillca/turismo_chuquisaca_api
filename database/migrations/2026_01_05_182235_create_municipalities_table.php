@@ -23,6 +23,11 @@ return new class extends Migration
             $table->text('long_description')
                 ->nullable();
 
+            $table->decimal('latitud', 10, 8);
+            $table->decimal('longitud', 10, 8);
+
+            $table->string('address', 150);
+
             $table->string('image');
 
             $table->boolean('is_active')
