@@ -9,173 +9,109 @@ use Illuminate\Database\Eloquent\Collection;
 class MunicipalityRepository
 {
     /**
-     * TODO:
-     * Obtener todos los municipios paginados
+     * Obtiene todos los municipios paginados.
+     * Cada municipio incluye la información de su región y sus comunidades.
      *
-     * Con su la informacion de su región y sus comunidades
-     */
-
-    /**
-     * TODO:
-     * Obtener todos los municipios activos paginados
-     *
-     * Con su la informacion de su región y sus comunidades
-     */
-
-    /**
-     * TODO:
-     * Obtener los municipios activos por region (region_id)
-     *
-     * Con su la informacion de su región y sus comunidades
-     */
-
-    /**
-     * TODO:
-     * Buscar un municipio por su ID
-     *
-     * Con su la informacion de su región y sus comunidades
-     */
-
-    /**
-     * TODO:
-     * Crear un nuevo municipio
-     *
-     */
-
-    /**
-     * TODO:
-     * Actualizar un municipio existente
-     *
-     */
-
-    /**
-     * TODO:
-     * Eliminar un municipio
-     *
-     * solo si no tiene comunidades asociadas
-     *
-     */
-
-    /**
-     * TODO:
-     * Cambiar el estado activo/inactivo de un municipio
-     *
-     * Si se activa/inactiva un municipio, se deben activar/inactivar
-     * todas sus comunidades asociadas
-     *
-     */
-
-    /**
-     * TODO:
-     * Actualizar la imagen de un municipio
-     *
-     */
-
-
-    /**
-     * Obtener todos los municipios paginados
-     *
-     * Con la relación de región cargada y solo los municipios activos
-     *
-     * @param int $perPage Cantidad de registros por página por
-     * @return LengthAwarePaginator
+     * @param int $perPage Cantidad de registros por página.
+     * @return LengthAwarePaginator Municipios paginados.
      */
     public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
     {
-        return Municipality::with('region')
+        return Municipality::with(['region', 'communities'])
+            ->paginate($perPage);
+    }
+
+    /**
+     * Obtiene todos los municipios activos paginados.
+     * Cada municipio incluye la información de su región y sus comunidades.
+     *
+     * @param int $perPage Cantidad de registros por página.
+     * @return LengthAwarePaginator Municipios activos paginados.
+     */
+    public function getAllActivePaginated(int $perPage = 10): LengthAwarePaginator
+    {
+        return Municipality::with(['region', 'communities'])
             ->where('is_active', true)
             ->paginate($perPage);
     }
 
     /**
-     * Obtener todos los municipios sin paginar
+     * Obtiene los municipios activos por región.
+     * Cada municipio incluye la información de su región y sus comunidades.
      *
-     * @return Collection
-     */
-    public function getAll(): Collection
-    {
-        return Municipality::with('region')->get();
-    }
-
-    /**
-     * Obtener solo los municipios activos
-     *
-     * @return Collection
-     */
-    public function getActive(): Collection
-    {
-        return Municipality::with('region')
-            ->where('is_active', true)
-            ->get();
-    }
-
-    /**
-     * Obtener municipios activos de una región específica
-     *
-     * @param int $regionId ID de la región
-     * @return Collection
+     * @param int $regionId Identificador de la región.
+     * @return Collection Colección de municipios activos de la región.
      */
     public function getActiveByRegion(int $regionId): Collection
     {
-        return Municipality::where('region_id', $regionId)
+        return Municipality::with(['region', 'communities'])
+            ->where('region_id', $regionId)
             ->where('is_active', true)
             ->get();
     }
 
     /**
-     * Obtener todos los municipios de una región específica
+     * Busca un municipio por su identificador.
+     * Incluye la información de su región y sus comunidades.
      *
-     * @param int $regionId ID de la región
-     * @param int $perPage Cantidad de registros por página
-     * @return LengthAwarePaginator
-     */
-    public function getByRegion(int $regionId, int $perPage = 10): LengthAwarePaginator
-    {
-        return Municipality::with('region')
-            ->where('region_id', $regionId)
-            ->paginate($perPage);
-    }
-
-    /**
-     * Buscar un municipio por su ID
-     *
-     * @param int $id ID del municipio
-     * @return Municipality|null
+     * @param int $id Identificador único del municipio.
+     * @return Municipality|null Instancia del municipio o null si no existe.
      */
     public function findById(int $id): ?Municipality
     {
-        return Municipality::with('region')->find($id);
+        return Municipality::with(['region', 'communities'])
+            ->find($id);
     }
 
     /**
-     * Crear un nuevo municipio
+     * Crea un nuevo municipio.
      *
-     * @param array $data Datos del municipio a crear
-     * @return Municipality
+     * @param array $data Datos validados para la creación del municipio.
+     * @return Municipality Municipio creado.
      */
     public function create(array $data): Municipality
     {
-        return Municipality::create($data);
+        return Municipality::create([
+            'region_id' => $data['region_id'],
+            'name' => $data['name'],
+            'short_description' => $data['short_description'],
+            'long_description' => $data['long_description'] ?? null,
+            'latitud' => $data['latitud'],
+            'longitud' => $data['longitud'],
+            'address' => $data['address'],
+            'image' => $data['image'],
+            'is_active' => true,
+        ]);
     }
 
     /**
-     * Actualizar un municipio existente
+     * Actualiza la información de un municipio existente.
      *
-     * @param Municipality $municipality Instancia del municipio a actualizar
-     * @param array $data Datos a actualizar
-     * @return Municipality Municipio actualizado
+     * @param Municipality $municipality Instancia del municipio a actualizar.
+     * @param array $data Datos validados para la actualización.
+     * @return Municipality Municipio actualizado.
      */
     public function update(Municipality $municipality, array $data): Municipality
     {
-        $municipality->update($data);
-        return $municipality->fresh('region');
+        $municipality->update([
+            'region_id' => $data['region_id'] ?? $municipality->region_id,
+            'name' => $data['name'] ?? $municipality->name,
+            'short_description' => $data['short_description'] ?? $municipality->short_description,
+            'long_description' => $data['long_description'] ?? $municipality->long_description,
+            'latitud' => $data['latitud'] ?? $municipality->latitud,
+            'longitud' => $data['longitud'] ?? $municipality->longitud,
+            'address' => $data['address'] ?? $municipality->address,
+            'image' => $data['image'] ?? $municipality->image,
+        ]);
+
+        return $municipality->fresh(['region', 'communities']);
     }
 
     /**
-     * Eliminar un municipio
+     * Elimina un municipio.
      *
-     * @param Municipality $municipality Instancia del municipio a eliminar
-     * @return bool True si se eliminó correctamente
+     * @param Municipality $municipality Instancia del municipio a eliminar.
+     * @return bool Verdadero si la eliminación fue exitosa.
      */
     public function delete(Municipality $municipality): bool
     {
@@ -183,15 +119,14 @@ class MunicipalityRepository
     }
 
     /**
-     * Actualizar la imagen de un municipio
+     * Cambia el estado de activación de un municipio.
      *
-     * @param Municipality $municipality Instancia del municipio
-     * @param string $imagePath Ruta de la nueva imagen
-     * @return Municipality Municipio actualizado
+     * @param Municipality $municipality Instancia del municipio.
+     * @return Municipality Municipio con el estado actualizado.
      */
-    public function updateImage(Municipality $municipality, string $imagePath): Municipality
+    public function toggleActive(Municipality $municipality): Municipality
     {
-        $municipality->update(['image' => $imagePath]);
-        return $municipality->fresh('region');
+        $municipality->update(['is_active' => !$municipality->is_active]);
+        return $municipality->fresh();
     }
 }

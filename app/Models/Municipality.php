@@ -12,6 +12,9 @@ class Municipality extends Model
         'name',
         'short_description',
         'long_description',
+        'latitud',
+        'longitud',
+        'address',
         'image',
         'is_active'
     ];
@@ -42,5 +45,13 @@ class Municipality extends Model
     public function region(): BelongsTo
     {
         return $this->belongsTo(Region::class);
+    }
+
+    /**
+     * Relación: Un municipio tiene muchas comunidades
+     */
+    public function communities()
+    {
+        return $this->hasMany(Community::class);
     }
 }
