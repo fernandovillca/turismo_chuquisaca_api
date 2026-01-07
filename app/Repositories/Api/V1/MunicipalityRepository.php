@@ -143,4 +143,17 @@ class MunicipalityRepository
         return Municipality::where('region_id', $regionId)
             ->update(['is_active' => $isActive]);
     }
+
+    /**
+     * Obtiene los IDs de los municipios asociados a una región.
+     *
+     * @param int $regionId Identificador de la región.
+     * @return array Arreglo de IDs de municipios.
+     */
+    public function getIdsByRegion(int $regionId): array
+    {
+        return Municipality::where('region_id', $regionId)
+            ->pluck('id')
+            ->toArray();
+    }
 }

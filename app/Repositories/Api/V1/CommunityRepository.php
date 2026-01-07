@@ -128,9 +128,9 @@ class CommunityRepository
      * @param bool $isActive Nuevo estado.
      * @return int Número de comunidades actualizadas.
      */
-    public function updateStatusByMunicipality(int $municipalityId, bool $isActive): int
+    public function updateStatusByMunicipality(array $municipalityIds, bool $isActive): int
     {
-        return Community::where('municipality_id', $municipalityId)
+        return Community::whereIn('municipality_id', $municipalityIds)
             ->update(['is_active' => $isActive]);
     }
 }

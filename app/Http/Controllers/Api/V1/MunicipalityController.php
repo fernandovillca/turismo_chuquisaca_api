@@ -22,7 +22,22 @@ class MunicipalityController extends Controller
 
     public function index()
     {
-        //
+        /*
+
+        try {
+            $perPage = min($request->input('per_page', 10), 100);
+
+            $regions = $this->regionService->getAllRegions($perPage);
+
+            return (new RegionCollection($regions))
+                ->additional([
+                    'message' => 'Regiones obtenidas exitosamente',
+                    'status_code' => 200
+                ]);
+        } catch (Exception $e) {
+            return ApiResponse::error('Error al obtener las regiones', $e->getMessage(), 500);
+        }
+        */
     }
 
 

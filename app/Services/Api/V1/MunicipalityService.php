@@ -79,7 +79,7 @@ class MunicipalityService
             throw new Exception("El municipio con ID {$id} no existe");
         }
 
-        return $this->municipalityRepository->findById($id);
+        return $municipality;
     }
 
     /**

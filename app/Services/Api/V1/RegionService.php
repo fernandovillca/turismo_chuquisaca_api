@@ -4,6 +4,7 @@ namespace App\Services\Api\V1;
 
 use App\Repositories\Api\V1\RegionRepository;
 use App\Models\Region;
+use App\Repositories\Api\V1\CommunityRepository;
 use App\Repositories\Api\V1\MunicipalityRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Exception;
@@ -12,13 +13,16 @@ class RegionService
 {
     protected RegionRepository $regionRepository;
     protected MunicipalityRepository $municipalityRepository;
+    protected CommunityRepository $communityRepository;
 
     public function __construct(
         RegionRepository $regionRepository,
-        MunicipalityRepository $municipalityRepository
+        MunicipalityRepository $municipalityRepository,
+        CommunityRepository $communityRepository
     ) {
         $this->regionRepository = $regionRepository;
         $this->municipalityRepository = $municipalityRepository;
+        $this->communityRepository = $communityRepository;
     }
 
     /**
@@ -49,7 +53,12 @@ class RegionService
      */
     public function getRegionById(int $id): ?Region
     {
-        return $this->regionRepository->findById($id);
+        $region = $this->regionRepository->findById($id);
+
+        if (!$region) {
+            throw new Exception("La región con ID {$id} no existe", 404);
+        }
+        return $region;
     }
 
     /**
@@ -66,25 +75,37 @@ class RegionService
     /**
      * Actualiza una región existente.
      *
-     * @param Region $region Instancia de la región a actualizar.
+     * @param int $id Identificador de la región a actualizar.
      * @param array $data Datos validados para la actualización.
      * @return Region Región actualizada.
      */
-    public function updateRegion(Region $region, array $data): Region
+    public function updateRegion(int $id, array $data): Region
     {
+        $region = $this->regionRepository->findById($id);
+
+        if (!$region) {
+            throw new Exception("La región con ID {$id} no existe", 404);
+        }
+
         return $this->regionRepository->update($region, $data);
     }
 
     /**
      * Elimina una región.
      *
-     * @param Region $region Instancia de la región a eliminar.
+     * @param int $id Identificador de la región a eliminar.
      * @return bool Verdadero si la eliminación fue exitosa.
      */
-    public function deleteRegion(Region $region): bool
+    public function deleteRegion(int $id): bool
     {
+        $region = $this->regionRepository->findById($id);
+
+        if (!$region) {
+            throw new Exception("La región con ID {$id} no existe", 404);
+        }
+
         if ($region->municipalities()->count() > 0) {
-            throw new Exception('No se puede eliminar la región porque tiene municipios asociados');
+            throw new Exception('No se puede eliminar la región porque tiene municipios asociados', 409);
         }
 
         return $this->regionRepository->delete($region);
@@ -95,17 +116,33 @@ class RegionService
      * Si el estado cambia, tambien se cambia el estado de sus municipios asociados.
      * (y las comunidades de esos municipios en cascada).
      *
-     * @param Region $region Instancia de la región.
+     * @param int $id Identificador de la región.
      * @return Region Región con el estado actualizado.
      */
-    public function toggleRegionStatus(Region $region): Region
+    public function toggleRegionStatus(int $id): Region
     {
+        $region = $this->regionRepository->findById($id);
+
+        if (!$region) {
+            throw new Exception("La región con ID {$id} no existe", 404);
+        }
+
         $updatedRegion = $this->regionRepository->toggleActive($region);
 
         $this->municipalityRepository->updateStatusByRegion(
             $region->id,
             $updatedRegion->is_active
         );
+
+        $municipalityIds = $this->municipalityRepository
+            ->getIdsByRegion($region->id);
+
+        if (!empty($municipalityIds)) {
+            $this->communityRepository->updateStatusByMunicipality(
+                $municipalityIds,
+                $updatedRegion->is_active
+            );
+        }
 
         return $updatedRegion->fresh(['municipalities.communities']);
     }

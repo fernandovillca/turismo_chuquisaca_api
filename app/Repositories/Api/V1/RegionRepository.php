@@ -15,7 +15,7 @@ class RegionRepository
      */
     public function getAll(): Collection
     {
-        return Region::with('municipalities')
+        return Region::with('municipalities.communities')
             ->get();
     }
 
@@ -28,7 +28,7 @@ class RegionRepository
 
     public function getAllActive(): Collection
     {
-        return Region::with('municipalities')
+        return Region::with('municipalities.communities')
             ->where('is_active', true)
             ->get();
     }
@@ -41,7 +41,7 @@ class RegionRepository
      */
     public function findById(int $id): ?Region
     {
-        return Region::with('municipalities')
+        return Region::with('municipalities.communities')
             ->find($id);
     }
 
