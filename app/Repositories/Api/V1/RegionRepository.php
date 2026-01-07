@@ -3,55 +3,47 @@
 namespace App\Repositories\Api\V1;
 
 use App\Models\Region;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 class RegionRepository
 {
     /**
-     * Obtiene una lista paginada de regiones paginada.
-     *
-     * @param int $perPage Cantidad de registros por página.
-     * @return LengthAwarePaginator Colección paginada de regiones.
-     */
-    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
-    {
-        return Region::paginate($perPage);
-    }
-
-    /**
      * Obtiene todas las regiones sin paginación.
+     * Cada region incluye la informacion de sus municipios.
      *
      * @return Collection Colección completa de regiones.
      */
-    public function getAll(): Collection
+    public function getAllWithMunicipalities(): Collection
     {
-        return Region::all();
+        return Region::with('municipalities')
+            ->get();
     }
 
     /**
-     * Obtiene todas las regiones activas.
+     * Obtiene todas las regiones activas sin paginación.
+     * Cada region incluye la informacion de sus municipios.
      *
-     * Retorna únicamente las regiones cuyo estado se encuentra activo.
-     *
-     * @return Collection Colección de regiones activas.
+     * @return Collection Colección completa de regiones activas.
      */
-    public function getActive(): Collection
+
+    public function getAllActiveWithMunicipalities(): Collection
     {
-        return Region::where('is_active', true)->get();
+        return Region::with('municipalities')
+            ->where('is_active', true)
+            ->get();
     }
 
     /**
-     * Busca una región por su identificador.
+     * Busca una región por su identificador junto con sus municipios.
      *
      * @param int $id Identificador único de la región.
      * @return Region|null Instancia de la región o null si no existe.
      */
     public function findById(int $id): ?Region
     {
-        return Region::find($id);
+        return Region::with('municipalities')
+            ->find($id);
     }
-
 
     /**
      * Crea una nueva región.
@@ -61,7 +53,11 @@ class RegionRepository
      */
     public function create(array $data): Region
     {
-        return Region::create($data);
+        return Region::create([
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'is_active' => true,
+        ]);
     }
 
     /**
@@ -73,7 +69,11 @@ class RegionRepository
      */
     public function update(Region $region, array $data): Region
     {
-        $region->update($data);
+        $region->update([
+            'name' => $data['name'] ?? $region->name,
+            'description' => $data['description'] ?? $region->description,
+        ]);
+
         return $region->fresh();
     }
 
@@ -90,8 +90,6 @@ class RegionRepository
 
     /**
      * Cambia el estado de activación de una región.
-     *
-     * Si la región está activa, será desactivada; si está inactiva, será activada.
      *
      * @param Region $region Instancia de la región.
      * @return Region Región con el estado actualizado.
