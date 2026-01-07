@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\MunicipalityController;
 use App\Http\Controllers\Api\V1\RegionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -10,4 +11,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::apiResource('regions', RegionController::class);
+
+    Route::apiResource('municipalities', MunicipalityController::class);
 });
