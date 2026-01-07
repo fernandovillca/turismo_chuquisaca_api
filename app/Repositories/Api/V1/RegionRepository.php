@@ -13,7 +13,7 @@ class RegionRepository
      *
      * @return Collection Colección completa de regiones.
      */
-    public function getAllWithMunicipalities(): Collection
+    public function getAll(): Collection
     {
         return Region::with('municipalities')
             ->get();
@@ -26,7 +26,7 @@ class RegionRepository
      * @return Collection Colección completa de regiones activas.
      */
 
-    public function getAllActiveWithMunicipalities(): Collection
+    public function getAllActive(): Collection
     {
         return Region::with('municipalities')
             ->where('is_active', true)
