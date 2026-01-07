@@ -129,4 +129,18 @@ class MunicipalityRepository
         $municipality->update(['is_active' => !$municipality->is_active]);
         return $municipality->fresh();
     }
+
+    /**
+     * Actualiza el estado de todas los municipios de una región.
+     * Este método se usa cuando se activa/inactiva una región.
+     *
+     * @param int $regionId Identificador de la región
+     * @param bool $isActive Nuevo estado.
+     * @return int Número de municipios actualizados.
+     */
+    public function updateStatusByRegion(int $regionId, bool $isActive): int
+    {
+        return Municipality::where('region_id', $regionId)
+            ->update(['is_active' => $isActive]);
+    }
 }
