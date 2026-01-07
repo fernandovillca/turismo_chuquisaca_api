@@ -12,6 +12,7 @@ use App\Models\Region;
 use App\Services\Api\V1\RegionService;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class RegionController extends Controller
@@ -26,15 +27,21 @@ class RegionController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPage = min($request->input('per_page', 10), 100);
-
-            $regions = $this->regionService->getAllRegions($perPage);
+            $regions = $request->boolean('is_active')
+                ? $this->regionService->getActiveRegions()
+                : $this->regionService->getAllRegions();
 
             return (new RegionCollection($regions))
                 ->additional([
                     'message' => 'Regiones obtenidas exitosamente',
                     'status_code' => 200
                 ]);
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo obtener las regiones de la base de datos',
+                500
+            );
         } catch (Exception $e) {
             return ApiResponse::error('Error al obtener las regiones', $e->getMessage(), 500);
         }
@@ -52,7 +59,13 @@ class RegionController extends Controller
                 ])
                 ->response()
                 ->setStatusCode(201);
-        } catch (\Exception $e) {
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo crear la región en la base de datos',
+                500
+            );
+        } catch (Exception $e) {
             return ApiResponse::error('Error al crear la región', $e->getMessage(), 500);
         }
     }
@@ -60,9 +73,7 @@ class RegionController extends Controller
     public function show(int $id)
     {
         try {
-            $region = $this->findRegionOrFail($id);
-
-            if ($region instanceof JsonResponse) return $region;
+            $region = $this->regionService->getRegionById($id);
 
             return (new RegionResource($region))
                 ->additional([
@@ -70,18 +81,18 @@ class RegionController extends Controller
                     'status_code' => 200
                 ]);
         } catch (Exception $e) {
-            return ApiResponse::error('Error al obtener la región', $e->getMessage(), 500);
+            return ApiResponse::error(
+                'Error al obtener la región',
+                $e->getMessage(),
+                $e->getCode() ?: 500
+            );
         }
     }
 
     public function update(UpdateRegionRequest  $request, int $id)
     {
         try {
-            $region = $this->findRegionOrFail($id);
-
-            if ($region instanceof JsonResponse) return $region;
-
-            $updatedRegion = $this->regionService->updateRegion($region, $request->validated());
+            $updatedRegion = $this->regionService->updateRegion($id, $request->validated());
 
             return (new RegionResource($updatedRegion))
                 ->additional([
@@ -89,37 +100,67 @@ class RegionController extends Controller
                     'status_code' => 200
                 ])
                 ->response();
-        } catch (\Exception $e) {
-            return ApiResponse::error('Error al actualizar la región', $e->getMessage(), 500);
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo actualizar la región en la base de datos',
+                500
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error(
+                'Error al actualizar la región',
+                $e->getMessage(),
+                $e->getCode() ?: 500
+            );
         }
     }
 
-    public function destroy(Int $id): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
         try {
-            $region = $this->regionService->getRegionById($id);
-
-            if (!$region) return ApiResponse::notFound('La región con ID ' . $id . ' no existe');
-
-            $this->regionService->deleteRegion($region);
+            $this->regionService->deleteRegion($id);
 
             return response()->json([
                 'status_code' => 200,
                 'message' => 'Región eliminada exitosamente'
             ]);
-        } catch (\Exception $e) {
-            return ApiResponse::conflict('No se puede eliminar la región porque tiene registros relacionados');
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo eliminar la región en la base de datos',
+                500
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error(
+                'Error al eliminar la región',
+                $e->getMessage(),
+                $e->getCode() ?: 500
+            );
         }
     }
 
-    private function findRegionOrFail(int $id): Region|JsonResponse
+    public function toggleStatus(int $id)
     {
-        $region = $this->regionService->getRegionById($id);
+        try {
+            $region = $this->regionService->toggleRegionStatus($id);
 
-        if (!$region) {
-            return ApiResponse::notFound('La región con ID ' . $id . ' no existe');
+            return (new RegionResource($region))
+                ->additional([
+                    'message' => 'Estado de la región actualizado exitosamente',
+                    'status_code' => 200
+                ]);
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo actualizar el estado de la región en la base de datos',
+                500
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error(
+                'Error al actualizar el estado de la región',
+                $e->getMessage(),
+                $e->getCode() ?: 500
+            );
         }
-
-        return $region;
     }
 }
