@@ -5,7 +5,7 @@ namespace App\Services\Api\V1;
 use App\Repositories\Api\V1\MunicipalityRepository;
 use App\Repositories\Api\V1\RegionRepository;
 use App\Models\Municipality;
-use App\Exceptions\ModelNotFoundApiException;
+use App\Repositories\Api\V1\CommunityRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
@@ -15,13 +15,16 @@ class MunicipalityService
 {
     protected MunicipalityRepository $municipalityRepository;
     protected RegionRepository $regionRepository;
+    protected CommunityRepository $communityRepository;
 
     public function __construct(
         MunicipalityRepository $municipalityRepository,
-        RegionRepository $regionRepository
+        RegionRepository $regionRepository,
+        CommunityRepository $communityRepository
     ) {
         $this->municipalityRepository = $municipalityRepository;
         $this->regionRepository = $regionRepository;
+        $this->communityRepository = $communityRepository;
     }
 
     /**
@@ -36,16 +39,24 @@ class MunicipalityService
     }
 
     /**
-     * Obtener municipios activos de una región específica
-     * Valida que la región exista antes de buscar sus municipios
+     * Obtener todos los municipios activos paginados
      *
-     * @param int $regionId ID de la región
-     * @return Collection
-     * @throws Exception Si la región no existe
+     * @param int $perPage Cantidad de registros por página
+     * @return LengthAwarePaginator
+     */
+    public function getActiveMunicipalities(int $perPage = 10): LengthAwarePaginator
+    {
+        return $this->municipalityRepository->getAllActivePaginated($perPage);
+    }
+
+    /**
+     * Obtiene los municipios activos por región.
+     * 
+     * @param int $regionId Identificador de la región.
+     * @return Collection Colección de municipios activos de la región.
      */
     public function getActiveMunicipalitiesByRegion(int $regionId): Collection
     {
-        // Validar que la región exista
         $region = $this->regionRepository->findById($regionId);
         if (!$region) {
             throw new Exception("La región con ID {$regionId} no existe");
@@ -62,15 +73,20 @@ class MunicipalityService
      */
     public function getMunicipalityById(int $id): ?Municipality
     {
+        $municipality = $this->municipalityRepository->findById($id);
+
+        if (!$municipality) {
+            throw new Exception("El municipio con ID {$id} no existe");
+        }
+
         return $this->municipalityRepository->findById($id);
     }
 
-    /**TODO: OK
+    /**
      * Crear un nuevo municipio
      *
      * @param array $data Datos del municipio
      * @return Municipality
-     * @throws Exception Si hay errores de validación de negocio
      */
     public function createMunicipality(array $data, UploadedFile $image): Municipality
     {
@@ -86,9 +102,86 @@ class MunicipalityService
         $imagePath = $this->saveImage($image);
         $data['image'] = $imagePath;
 
-        $data['is_active'] = $data['is_active'] ?? true;
-
         return $this->municipalityRepository->create($data);
+    }
+
+    /**
+     * Actualizar un municipio existente
+     *
+     * @param int $id Identificador del municipio a actualizar
+     * @param array $data Datos a actualizar
+     * @return Municipality
+     */
+    public function updateMunicipality(
+        int $id,
+        array $data,
+        ?UploadedFile $image = null
+    ): Municipality {
+        $municipality = $this->municipalityRepository->findById($id);
+        if (!$municipality) {
+            throw new Exception("El municipio con ID {$id} no existe");
+        }
+
+        $region = $this->regionRepository->findById($data['region_id']);
+
+        if (!$region) {
+            throw new Exception("La región con ID {$data['region_id']} no existe");
+        }
+
+        if (!$region->is_active) {
+            throw new Exception("No se puede crear un municipio en una región inactiva");
+        }
+
+        if ($image) {
+            $this->deleteImage($municipality->image);
+            $data['image'] = $this->saveImage($image);
+        }
+
+        return $this->municipalityRepository->update($municipality, $data);
+    }
+
+    /**
+     * Eliminar un municipio
+     *
+     * @param Municipality $municipality Instancia del municipio a eliminar
+     * @return bool
+     */
+    public function deleteMunicipality(int $id): bool
+    {
+        $municipality = $this->municipalityRepository->findById($id);
+        if (!$municipality) {
+            throw new Exception("El municipio con ID {$id} no existe");
+        }
+
+        if ($municipality->communities()->count() > 0) {
+            throw new Exception('No se puede eliminar el municipio porque tiene comunidades asociadas');
+        }
+
+        return $this->municipalityRepository->delete($municipality);
+    }
+
+    /**
+     * Cambia el estado de activación de un municipio.
+     * Si el estado cambia, tambien se cambia el estado de sus comunidades asociados.
+     *
+     * @param int $id Identificador del municipio.
+     * @return Municipality Municipio con el estado actualizado.
+     */
+    public function toggleMunicipalityStatus(int $id): Municipality
+    {
+        $municipality = $this->municipalityRepository->findById($id);
+        if (!$municipality) {
+            throw new Exception("El municipio con ID {$id} no existe");
+        }
+
+        $updatedMunicipality = $this->municipalityRepository->toggleActive($municipality);
+
+        $this->communityRepository->updateStatusByMunicipality(
+            $municipality->id,
+            $updatedMunicipality->is_active
+        );
+
+        return $updatedMunicipality->fresh(['communities']);
     }
 
     /**
@@ -96,6 +189,8 @@ class MunicipalityService
      *
      * @param UploadedFile $image
      * @return string Ruta de la imagen guardada
+     * 
+     * TODO: Mover este metodo a un servicio de manejo de imágenes
      */
     private function saveImage(UploadedFile $image): string
     {
@@ -107,60 +202,12 @@ class MunicipalityService
     }
 
     /**
-     * Actualizar un municipio existente
-     *
-     * @param Municipality $municipality Instancia del municipio a actualizar
-     * @param array $data Datos a actualizar
-     * @return Municipality
-     * @throws Exception Si hay errores de validación de negocio
-     */
-    public function updateMunicipality(Municipality $municipality, array $data, ?UploadedFile $image = null): Municipality
-    {
-        if (isset($data['region_id']) && $data['region_id'] != $municipality->region_id) {
-            $region = $this->regionRepository->findById($data['region_id']);
-
-            if (!$region) {
-                throw new Exception("La región con ID {$data['region_id']} no existe");
-            }
-
-            if (!$region->is_active) {
-                throw new Exception("No se puede asignar un municipio a una región inactiva");
-            }
-        }
-
-        if ($image) {
-            $this->deleteImage($municipality->image);
-
-            $data['image'] = $this->saveImage($image);
-        }
-
-        return $this->municipalityRepository->update($municipality, $data);
-    }
-
-
-    /**
-     * Obtener un municipio por ID o lanzar excepción si no existe
-     *
-     * @param int $id ID del municipio
-     * @return Municipality
-     * @throws ModelNotFoundApiException Si el municipio no existe
-     */
-    public function getMunicipalityByIdOrFail(int $id): Municipality
-    {
-        $municipality = $this->municipalityRepository->findById($id);
-
-        if (!$municipality) {
-            throw new ModelNotFoundApiException("El municipio con ID {$id} no existe");
-        }
-
-        return $municipality;
-    }
-
-    /**
      * Eliminar imagen del storage
      *
      * @param string $imagePath Ruta de la imagen
      * @return void
+     * 
+     * TODO: Mover este metodo a un servicio de manejo de imágenes
      */
     private function deleteImage(string $imagePath): void
     {
@@ -169,52 +216,5 @@ class MunicipalityService
         if (file_exists($fullPath)) {
             unlink($fullPath);
         }
-    }
-
-    /**
-     * Eliminar un municipio
-     * Puede incluir validaciones adicionales antes de eliminar
-     *
-     * @param Municipality $municipality Instancia del municipio a eliminar
-     * @return bool
-     * @throws Exception Si no se puede eliminar por reglas de negocio
-     */
-    public function deleteMunicipality(Municipality $municipality): bool
-    {
-        // Aquí puedes agregar validaciones adicionales
-        // Por ejemplo: verificar que no tenga lugares turísticos asociados
-
-        return $this->municipalityRepository->delete($municipality);
-    }
-
-
-    /**
-     * Actualizar la imagen de un municipio
-     * Maneja la lógica de negocio para el cambio de imagen
-     *
-     * @param Municipality $municipality Instancia del municipio
-     * @param string $imagePath Ruta de la nueva imagen
-     * @return Municipality
-     */
-    public function updateMunicipalityImage(Municipality $municipality, string $imagePath): Municipality
-    {
-        // Aquí puedes agregar lógica adicional como:
-        // - Eliminar la imagen anterior del storage
-        // - Validar que la imagen exista
-        // - Optimizar la imagen antes de guardar
-
-        return $this->municipalityRepository->updateImage($municipality, $imagePath);
-    }
-
-    /**
-     * Validar que un municipio pertenezca a una región específica
-     *
-     * @param Municipality $municipality Instancia del municipio
-     * @param int $regionId ID de la región esperada
-     * @return bool
-     */
-    public function municipalityBelongsToRegion(Municipality $municipality, int $regionId): bool
-    {
-        return $municipality->region_id === $regionId;
     }
 }
