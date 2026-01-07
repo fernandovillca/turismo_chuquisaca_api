@@ -17,28 +17,23 @@ class RegionService
     }
 
     /**
-     * Obtiene todas las regiones paginadas.
+     * Obtiene todas las regiones.
      *
-     * Este método retorna un listado de regiones paginadas.
-     *
-     * @param int $perPage Número de registros por página. Valor por defecto: 10.
-     * @return LengthAwarePaginator Colección paginada de regiones.
+     * @return Collection Colección paginada de regiones.
      */
-    public function getAllRegions(int $perPage = 10): LengthAwarePaginator
+    public function getAllRegions(): Collection
     {
-        return $this->regionRepository->getAllPaginated($perPage);
+        return $this->regionRepository->getAll();
     }
 
     /**
      * Obtiene todas las regiones activas.
      *
-     * Retorna únicamente las regiones cuyo estado se encuentra activo.
-     *
      * @return Collection Colección de regiones activas.
      */
     public function getActiveRegions(): Collection
     {
-        return $this->regionRepository->getActive();
+        return $this->regionRepository->getAllActive();
     }
 
     /**
