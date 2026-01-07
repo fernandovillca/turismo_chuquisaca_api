@@ -4,22 +4,27 @@ namespace App\Services\Api\V1;
 
 use App\Repositories\Api\V1\RegionRepository;
 use App\Models\Region;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\Repositories\Api\V1\MunicipalityRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Exception;
 
 class RegionService
 {
     protected RegionRepository $regionRepository;
+    protected MunicipalityRepository $municipalityRepository;
 
-    public function __construct(RegionRepository $regionRepository)
-    {
+    public function __construct(
+        RegionRepository $regionRepository,
+        MunicipalityRepository $municipalityRepository
+    ) {
         $this->regionRepository = $regionRepository;
+        $this->municipalityRepository = $municipalityRepository;
     }
 
     /**
      * Obtiene todas las regiones.
      *
-     * @return Collection Colección paginada de regiones.
+     * @return Collection Colección de regiones.
      */
     public function getAllRegions(): Collection
     {
@@ -78,21 +83,30 @@ class RegionService
      */
     public function deleteRegion(Region $region): bool
     {
-        // TODO:  agregar validaciones de negocio, verificar si tiene registros relacionados
+        if ($region->municipalities()->count() > 0) {
+            throw new Exception('No se puede eliminar la región porque tiene municipios asociados');
+        }
 
         return $this->regionRepository->delete($region);
     }
 
     /**
      * Cambia el estado de activación de una región.
-     *
-     * Si la región está activa, será desactivada; si está inactiva, será activada.
+     * Si el estado cambia, tambien se cambia el estado de sus municipios asociados.
+     * (y las comunidades de esos municipios en cascada).
      *
      * @param Region $region Instancia de la región.
      * @return Region Región con el estado actualizado.
      */
     public function toggleRegionStatus(Region $region): Region
     {
-        return $this->regionRepository->toggleActive($region);
+        $updatedRegion = $this->regionRepository->toggleActive($region);
+
+        $this->municipalityRepository->updateStatusByRegion(
+            $region->id,
+            $updatedRegion->is_active
+        );
+
+        return $updatedRegion->fresh(['municipalities.communities']);
     }
 }
