@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\CommunityController;
 use App\Http\Controllers\Api\V1\MunicipalityController;
 use App\Http\Controllers\Api\V1\RegionController;
 use Illuminate\Http\Request;
@@ -15,4 +16,6 @@ Route::prefix('v1')->group(function () {
 
     Route::apiResource('municipalities', MunicipalityController::class);
     Route::patch('municipalities/{id}/status', [MunicipalityController::class, 'toggleStatus']);
+
+    Route::apiResource('communities', CommunityController::class);
 });
