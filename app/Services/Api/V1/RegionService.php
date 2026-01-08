@@ -138,7 +138,7 @@ class RegionService
             ->getIdsByRegion($region->id);
 
         if (!empty($municipalityIds)) {
-            $this->communityRepository->updateStatusByMunicipality(
+            $this->communityRepository->updateStatusByMunicipalities(
                 $municipalityIds,
                 $updatedRegion->is_active
             );

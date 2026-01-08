@@ -121,6 +121,20 @@ class CommunityRepository
     }
 
     /**
+     * Actualiza el estado de todas las comunidades de varios municipios.
+     * Este método se usa cuando se activa/inactiva una lista de municipios.
+     *
+     * @param int $municipalityId Identificador del municipio.
+     * @param bool $isActive Nuevo estado.
+     * @return int Número de comunidades actualizadas.
+     */
+    public function updateStatusByMunicipalities(array $municipalityIds, bool $isActive): int
+    {
+        return Community::whereIn('municipality_id', $municipalityIds)
+            ->update(['is_active' => $isActive]);
+    }
+
+    /**
      * Actualiza el estado de todas las comunidades de un municipio.
      * Este método se usa cuando se activa/inactiva un municipio.
      *
@@ -128,9 +142,9 @@ class CommunityRepository
      * @param bool $isActive Nuevo estado.
      * @return int Número de comunidades actualizadas.
      */
-    public function updateStatusByMunicipality(array $municipalityIds, bool $isActive): int
+    public function updateStatusByMunicipality(int $municipalityId, bool $isActive): int
     {
-        return Community::whereIn('municipality_id', $municipalityIds)
+        return Community::where('municipality_id', $municipalityId)
             ->update(['is_active' => $isActive]);
     }
 }
