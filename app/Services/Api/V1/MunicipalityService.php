@@ -51,7 +51,7 @@ class MunicipalityService
 
     /**
      * Obtiene los municipios activos por región.
-     * 
+     *
      * @param int $regionId Identificador de la región.
      * @return Collection Colección de municipios activos de la región.
      */
@@ -76,7 +76,7 @@ class MunicipalityService
         $municipality = $this->municipalityRepository->findById($id);
 
         if (!$municipality) {
-            throw new Exception("El municipio con ID {$id} no existe");
+            throw new Exception("El municipio con ID {$id} no existe", 404);
         }
 
         return $municipality;
@@ -119,17 +119,20 @@ class MunicipalityService
     ): Municipality {
         $municipality = $this->municipalityRepository->findById($id);
         if (!$municipality) {
-            throw new Exception("El municipio con ID {$id} no existe");
+            throw new Exception("El municipio con ID {$id} no existe", 404);
         }
 
-        $region = $this->regionRepository->findById($data['region_id']);
+        if (isset($data['region_id'])) {
 
-        if (!$region) {
-            throw new Exception("La región con ID {$data['region_id']} no existe");
-        }
+            $region = $this->regionRepository->findById($data['region_id']);
 
-        if (!$region->is_active) {
-            throw new Exception("No se puede crear un municipio en una región inactiva");
+            if (!$region) {
+                throw new Exception("La región con ID {$data['region_id']} no existe", 404);
+            }
+
+            if (!$region->is_active) {
+                throw new Exception("No se puede crear un municipio en una región inactiva", 400);
+            }
         }
 
         if ($image) {
@@ -150,11 +153,11 @@ class MunicipalityService
     {
         $municipality = $this->municipalityRepository->findById($id);
         if (!$municipality) {
-            throw new Exception("El municipio con ID {$id} no existe");
+            throw new Exception("El municipio con ID {$id} no existe", 404);
         }
 
         if ($municipality->communities()->count() > 0) {
-            throw new Exception('No se puede eliminar el municipio porque tiene comunidades asociadas');
+            throw new Exception('No se puede eliminar el municipio porque tiene comunidades asociadas', 409);
         }
 
         return $this->municipalityRepository->delete($municipality);
@@ -171,7 +174,7 @@ class MunicipalityService
     {
         $municipality = $this->municipalityRepository->findById($id);
         if (!$municipality) {
-            throw new Exception("El municipio con ID {$id} no existe");
+            throw new Exception("El municipio con ID {$id} no existe", 404);
         }
 
         $updatedMunicipality = $this->municipalityRepository->toggleActive($municipality);
@@ -189,7 +192,7 @@ class MunicipalityService
      *
      * @param UploadedFile $image
      * @return string Ruta de la imagen guardada
-     * 
+     *
      * TODO: Mover este metodo a un servicio de manejo de imágenes
      */
     private function saveImage(UploadedFile $image): string
@@ -206,7 +209,7 @@ class MunicipalityService
      *
      * @param string $imagePath Ruta de la imagen
      * @return void
-     * 
+     *
      * TODO: Mover este metodo a un servicio de manejo de imágenes
      */
     private function deleteImage(string $imagePath): void

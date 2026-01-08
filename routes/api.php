@@ -14,4 +14,5 @@ Route::prefix('v1')->group(function () {
     Route::patch('regions/{id}/status', [RegionController::class, 'toggleStatus']);
 
     Route::apiResource('municipalities', MunicipalityController::class);
+    Route::patch('municipalities/{id}/status', [MunicipalityController::class, 'toggleStatus']);
 });

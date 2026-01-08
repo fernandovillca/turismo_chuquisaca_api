@@ -14,7 +14,6 @@ class MunicipalityCollection extends ResourceCollection
         ];
     }
 
-    /*
     public function paginationInformation($request, $paginated, $default)
     {
         return [
@@ -30,5 +29,4 @@ class MunicipalityCollection extends ResourceCollection
             ],
         ];
     }
-        */
 }
