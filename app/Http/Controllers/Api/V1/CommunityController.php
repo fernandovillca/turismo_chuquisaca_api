@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ApiResponse;
+use App\Http\Requests\Api\V1\StoreCommunityRequest;
 use App\Http\Resources\Api\V1\CommunityCollection;
 use App\Http\Resources\Api\V1\CommunityResource;
 use App\Services\Api\V1\CommunityService;
@@ -43,12 +44,27 @@ class CommunityController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreCommunityRequest $request)
     {
-        //
+        try {
+            $community = $this->communityService->createCommunity($request->validated());
+
+            return (new CommunityResource($community))
+                ->additional([
+                    'message' => 'Comunidad creada exitosamente',
+                    'status_code' => 201
+                ])
+                ->response()
+                ->setStatusCode(201);
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo crear la comunidad en la base de datos',
+                500
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error('Error al crear la comunidad', $e->getMessage(), 500);
+        }
     }
 
     public function show(int $id)
@@ -70,9 +86,6 @@ class CommunityController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         //
