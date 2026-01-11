@@ -52,7 +52,7 @@ class CommunityService
         $municipality = $this->municipalityRepository->findById($municipalityId);
 
         if (!$municipality) {
-            throw new Exception("El municipio con ID {$municipalityId} no existe");
+            throw new Exception("El municipio con ID {$municipalityId} no existe", 404);
         }
 
         return $this->communityRepository->getActiveByMunicipality($municipalityId);
@@ -69,7 +69,7 @@ class CommunityService
         $community = $this->communityRepository->findById($id);
 
         if (!$community) {
-            throw new Exception("La comunidad con ID {$id} no existe");
+            throw new Exception("La comunidad con ID {$id} no existe", 404);
         }
 
         return $community;
@@ -86,11 +86,11 @@ class CommunityService
         $municipality = $this->municipalityRepository->findById($data['municipality_id']);
 
         if (!$municipality) {
-            throw new Exception("El municipio con ID {$data['municipality_id']} no existe");
+            throw new Exception("El municipio con ID {$data['municipality_id']} no existe", 404);
         }
 
         if (!$municipality->is_active) {
-            throw new Exception("No se puede crear una comunidad en un municipio inactivo");
+            throw new Exception("No se puede crear una comunidad en un municipio inactivo", 409);
         }
 
         return $this->communityRepository->create($data);
@@ -108,17 +108,21 @@ class CommunityService
         $community = $this->communityRepository->findById($id);
 
         if (!$community) {
-            throw new Exception("La comunidad con ID {$id} no existe");
+            throw new Exception("La comunidad con ID {$id} no existe", 404);
         }
 
-        $municipality = $this->municipalityRepository->findById($data['municipality_id']);
+        if (isset($data['municipality_id'])) {
+            $municipality = $this->municipalityRepository->findById($data['municipality_id']);
 
-        if (!$municipality) {
-            throw new Exception("El municipio con ID {$data['municipality_id']} no existe");
-        }
+            if (!$municipality) {
+                throw new Exception("El municipio con ID {$data['municipality_id']} no existe", 404);
+            }
 
-        if (!$municipality->is_active) {
-            throw new Exception("No se puede asignar una comunidad a un municipio inactivo");
+            if (!$municipality->is_active) {
+                throw new Exception("No se puede asignar una comunidad a un municipio inactivo", 409);
+            }
+        } else {
+            throw new Exception("El ID del municipio es obligatorio para actualizar la comunidad", 400);
         }
 
         return $this->communityRepository->update($community, $data);
@@ -135,7 +139,7 @@ class CommunityService
         $community = $this->communityRepository->findById($id);
 
         if (!$community) {
-            throw new Exception("La comunidad con ID {$id} no existe");
+            throw new Exception("La comunidad con ID {$id} no existe", 404);
         }
 
         return $this->communityRepository->delete($community);
@@ -152,7 +156,7 @@ class CommunityService
         $community = $this->communityRepository->findById($id);
 
         if (!$community) {
-            throw new Exception("La comunidad con ID {$id} no existe");
+            throw new Exception("La comunidad con ID {$id} no existe", 404);
         }
 
         return $this->communityRepository
