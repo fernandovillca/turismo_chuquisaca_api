@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ApiResponse;
 use App\Http\Requests\Api\V1\StoreCommunityRequest;
+use App\Http\Requests\Api\V1\UpdateCommunityRequest;
 use App\Http\Resources\Api\V1\CommunityCollection;
 use App\Http\Resources\Api\V1\CommunityResource;
 use App\Services\Api\V1\CommunityService;
@@ -86,9 +87,30 @@ class CommunityController extends Controller
         }
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdateCommunityRequest $request, int $id)
     {
-        //
+        try {
+            $communityUpdate = $this->communityService->updateCommunity($id, $request->validated());
+
+            return (new CommunityResource($communityUpdate))
+                ->additional([
+                    'message' => 'Comunidad actualizada exitosamente',
+                    'status_code' => 200
+                ])
+                ->response();
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo actualizar la comunidad en la base de datos',
+                500
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error(
+                'Error al actualizar la comunidad',
+                $e->getMessage(),
+                $e->getCode() ?: 500
+            );
+        }
     }
 
     /**
