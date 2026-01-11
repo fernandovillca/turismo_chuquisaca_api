@@ -137,4 +137,29 @@ class CommunityController extends Controller
             );
         }
     }
+
+    public function toggleStatus(int $id)
+    {
+        try {
+            $community = $this->communityService->toggleCommunityStatus($id);
+
+            return (new CommunityResource($community))
+                ->additional([
+                    'message' => 'Estado de la comunidad actualizado exitosamente',
+                    'status_code' => 200
+                ]);
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo actualizar el estado de la comunidad en la base de datos',
+                500
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error(
+                'Error al actualizar el estado de la comunidad',
+                $e->getMessage(),
+                $e->getCode() ?: 500
+            );
+        }
+    }
 }
