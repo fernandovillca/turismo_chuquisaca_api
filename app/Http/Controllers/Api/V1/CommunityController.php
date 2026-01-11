@@ -12,6 +12,7 @@ use App\Services\Api\V1\CommunityService;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 
 class CommunityController extends Controller
 {
@@ -113,11 +114,27 @@ class CommunityController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(int $id): JsonResponse
     {
-        //
+        try {
+            $this->communityService->deleteCommunity($id);
+
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Comunidad eliminada exitosamente'
+            ]);
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo eliminar la comunidad en la base de datos',
+                500
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error(
+                'Error al eliminar la comunidad',
+                $e->getMessage(),
+                $e->getCode() ?: 500
+            );
+        }
     }
 }
