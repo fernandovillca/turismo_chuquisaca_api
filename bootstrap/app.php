@@ -30,7 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (ModelNotFoundException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    'success' => false,
+                    'status_code' => 404,
                     'message' => 'Recurso no encontrado',
                     'error' => 'El registro solicitado no existe'
                 ], 404);
@@ -42,7 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (NotFoundHttpException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    'success' => false,
+                    'status_code' => 404,
                     'message' => 'Endpoint no encontrado',
                     'error' => 'La ruta solicitada no existe'
                 ], 404);
@@ -54,7 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (MethodNotAllowedHttpException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    'success' => false,
+                    'status_code' => 405,
                     'message' => 'Método HTTP no permitido',
                     'error' => 'El método ' . $request->method() . ' no está permitido para esta ruta'
                 ], 405);
@@ -66,7 +66,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (AuthenticationException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    'success' => false,
+                    'status_code' => 401,
                     'message' => 'No autenticado',
                     'error' => 'Debes iniciar sesión para acceder a este recurso'
                 ], 401);
@@ -80,14 +80,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 // Errores de integridad referencial
                 if ($e->getCode() === '23000') {
                     return response()->json([
-                        'success' => false,
+                        'status_code' => 409,
                         'message' => 'Error de integridad de datos',
                         'error' => 'No se puede eliminar porque tiene registros relacionados'
                     ], 409);
                 }
 
                 return response()->json([
-                    'success' => false,
+                    'status_code' => 500,
                     'message' => 'Error en la base de datos',
                     'error' => 'Ocurrió un error al procesar la solicitud'
                 ], 500);
@@ -99,7 +99,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (HttpException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    'success' => false,
+                    'status_code' => $e->getStatusCode(),
                     'message' => 'Error HTTP',
                     'error' => $e->getMessage() ?: 'Ocurrió un error en el servidor'
                 ], $e->getStatusCode());
@@ -116,7 +116,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     : $e->getMessage();
 
                 return response()->json([
-                    'success' => false,
+                    'status_code' => 500,
                     'message' => 'Error del servidor',
                     'error' => $message,
                     // Solo en desarrollo/local
