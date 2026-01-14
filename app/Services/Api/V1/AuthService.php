@@ -2,6 +2,7 @@
 
 namespace App\Services\Api\V1;
 
+use App\Models\User;
 use App\Repositories\Api\V1\UserRepository;
 use Exception;
 use Illuminate\Support\Facades\Hash;
@@ -80,15 +81,24 @@ class AuthService
     /**
      * Cerrar sesión (eliminar token actual)
      *
-     * @param int $id ID del usuario autenticado
+     * @param User $user Usuario autenticado
      * @return bool
      */
-    public function logout(int $id)
+    public function logout(User $user)
     {
-        $user = $this->userRepository->findById($id);
-
         $this->userRepository->deleteCurrentToken($user);
 
         return true;
+    }
+
+    /**
+     * Obtener información del usuario autenticado
+     *
+     * @param User $user Usuario autenticado
+     * @return User
+     */
+    public function me(User $user): User
+    {
+        return $user;
     }
 }

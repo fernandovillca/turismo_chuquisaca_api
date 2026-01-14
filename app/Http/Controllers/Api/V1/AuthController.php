@@ -69,7 +69,7 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         try {
-            $this->authService->logout($request->user()->id);
+            $this->authService->logout($request->user());
 
             return response()->json([
                 'status_code' => 200,
@@ -77,6 +77,20 @@ class AuthController extends Controller
             ]);
         } catch (Exception $e) {
             return ApiResponse::error('Error al cerrar sesión', $e->getMessage(), 500);
+        }
+    }
+
+    public function me(Request $request): JsonResponse
+    {
+        try {
+            $user = $this->authService->me($request->user());
+
+            return response()->json([
+                'status_code' => 200,
+                'data' => new UserResource($user)
+            ]);
+        } catch (Exception $e) {
+            return ApiResponse::error('Error al obtener usuario', $e->getMessage(), 500);
         }
     }
 }
