@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ApiResponse;
+use App\Http\Requests\Api\V1\LoginRequest;
 use App\Http\Requests\Api\V1\RegisterRequest;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Services\Api\V1\AuthService;
@@ -43,6 +44,25 @@ class AuthController extends Controller
             );
         } catch (Exception $e) {
             return ApiResponse::error('Error al registrar usuario', $e->getMessage(), 400);
+        }
+    }
+
+    public function login(LoginRequest $request): JsonResponse
+    {
+        try {
+            $result = $this->authService->login($request->validated());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inicio de sesión exitoso',
+                'data' => [
+                    'user' => new UserResource($result['user']),
+                    'token' => $result['token'],
+                    'token_type' => 'Bearer'
+                ]
+            ]);
+        } catch (Exception $e) {
+            return ApiResponse::error('Error al iniciar sesión', $e->getMessage(), 401);
         }
     }
 }
