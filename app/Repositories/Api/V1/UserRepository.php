@@ -33,4 +33,26 @@ class UserRepository
     {
         return $user->createToken($tokenName)->plainTextToken;
     }
+
+    /**
+     * Buscar un usuario por su email
+     *
+     * @param string $email Email del usuario
+     * @return User|null
+     */
+    public function findByEmail(string $email): ?User
+    {
+        return User::where('email', $email)->first();
+    }
+
+    /**
+     * Eliminar todos los tokens de un usuario
+     *
+     * @param User $user Instancia del usuario
+     * @return void
+     */
+    public function deleteAllTokens(User $user): void
+    {
+        $user->tokens()->delete();
+    }
 }
