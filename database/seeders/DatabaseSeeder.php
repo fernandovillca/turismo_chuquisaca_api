@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             RegionSeeder::class,
             MunicipalitySeeder::class,
             CommunitySeeder::class,
+            LanguageSeeder::class,
         ]);
     }
 }
