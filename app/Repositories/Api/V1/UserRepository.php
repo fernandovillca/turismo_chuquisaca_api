@@ -75,6 +75,9 @@ class UserRepository
      */
     public function deleteCurrentToken(User $user): void
     {
-        $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
+        /** @var PersonalAccessToken|null $token */
+        $token = $user->currentAccessToken();
+
+        $token?->delete();
     }
 }

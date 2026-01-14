@@ -83,12 +83,9 @@ class AuthService
      * @param int $id ID del usuario autenticado
      * @return bool
      */
-    public function logout(int $id): bool
+    public function logout(int $id)
     {
         $user = $this->userRepository->findById($id);
-        if (!$user) {
-            throw new Exception('Usuario no encontrado');
-        }
 
         $this->userRepository->deleteCurrentToken($user);
 
