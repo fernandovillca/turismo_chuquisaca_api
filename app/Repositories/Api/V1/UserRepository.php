@@ -55,4 +55,26 @@ class UserRepository
     {
         $user->tokens()->delete();
     }
+
+    /**
+     * Buscar un usuario por su ID
+     *
+     * @param int $id ID del usuario
+     * @return User|null
+     */
+    public function findById(int $id): ?User
+    {
+        return User::find($id);
+    }
+
+    /**
+     * Eliminar el token actual de un usuario
+     *
+     * @param User $user Instancia del usuario
+     * @return void
+     */
+    public function deleteCurrentToken(User $user): void
+    {
+        $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
+    }
 }

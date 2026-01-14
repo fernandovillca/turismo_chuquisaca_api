@@ -65,4 +65,18 @@ class AuthController extends Controller
             return ApiResponse::error('Error al iniciar sesión', $e->getMessage(), 401);
         }
     }
+
+    public function logout(Request $request): JsonResponse
+    {
+        try {
+            $this->authService->logout($request->user()->id);
+
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Sesión cerrada exitosamente'
+            ]);
+        } catch (Exception $e) {
+            return ApiResponse::error('Error al cerrar sesión', $e->getMessage(), 500);
+        }
+    }
 }

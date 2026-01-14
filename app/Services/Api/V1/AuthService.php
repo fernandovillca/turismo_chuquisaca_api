@@ -76,4 +76,22 @@ class AuthService
             'token' => $token
         ];
     }
+
+    /**
+     * Cerrar sesión (eliminar token actual)
+     *
+     * @param int $id ID del usuario autenticado
+     * @return bool
+     */
+    public function logout(int $id): bool
+    {
+        $user = $this->userRepository->findById($id);
+        if (!$user) {
+            throw new Exception('Usuario no encontrado');
+        }
+
+        $this->userRepository->deleteCurrentToken($user);
+
+        return true;
+    }
 }
