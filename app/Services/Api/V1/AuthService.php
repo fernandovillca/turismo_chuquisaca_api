@@ -47,4 +47,33 @@ class AuthService
             'token' => $token
         ];
     }
+
+    /**
+     * Iniciar sesión
+     *
+     * @param array $credentials Credenciales de acceso
+     * @return array Usuario y token
+     */
+    public function login(array $credentials): array
+    {
+        $user = $this->userRepository->findByEmail($credentials['email']);
+
+        if (!$user) {
+            throw new Exception('Credenciales incorrectas');
+        }
+
+        if (!Hash::check($credentials['password'], $user->password)) {
+            throw new Exception('Credenciales incorrectas');
+        }
+
+        //(solo una sesión activa)
+        $this->userRepository->deleteAllTokens($user);
+
+        $token = $this->userRepository->createToken($user, 'auth-token');
+
+        return [
+            'user' => $user,
+            'token' => $token
+        ];
+    }
 }
