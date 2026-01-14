@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CommunityController;
 use App\Http\Controllers\Api\V1\MunicipalityController;
 use App\Http\Controllers\Api\V1\RegionController;
@@ -19,4 +20,8 @@ Route::prefix('v1')->group(function () {
 
     Route::apiResource('communities', CommunityController::class);
     Route::patch('communities/{id}/status', [CommunityController::class, 'toggleStatus']);
+
+    Route::prefix('auth')->group(function () {
+        Route::post('register', [AuthController::class, 'register']);
+    });
 });
