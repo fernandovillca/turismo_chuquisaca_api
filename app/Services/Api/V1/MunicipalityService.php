@@ -2,10 +2,12 @@
 
 namespace App\Services\Api\V1;
 
+use App\Models\Language;
 use App\Repositories\Api\V1\MunicipalityRepository;
 use App\Repositories\Api\V1\RegionRepository;
 use App\Models\Municipality;
 use App\Repositories\Api\V1\CommunityRepository;
+use App\Repositories\Api\V1\MunicipalityTranslationRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
@@ -16,15 +18,21 @@ class MunicipalityService
     protected MunicipalityRepository $municipalityRepository;
     protected RegionRepository $regionRepository;
     protected CommunityRepository $communityRepository;
+    protected MunicipalityTranslationRepository $municipalityTranslationRepository;
+    protected TranslationService $translationService;
 
     public function __construct(
         MunicipalityRepository $municipalityRepository,
         RegionRepository $regionRepository,
-        CommunityRepository $communityRepository
+        CommunityRepository $communityRepository,
+        MunicipalityTranslationRepository $municipalityTranslationRepository,
+        TranslationService $translationService
     ) {
         $this->municipalityRepository = $municipalityRepository;
         $this->regionRepository = $regionRepository;
         $this->communityRepository = $communityRepository;
+        $this->municipalityTranslationRepository = $municipalityTranslationRepository;
+        $this->translationService = $translationService;
     }
 
     /**
@@ -90,7 +98,7 @@ class MunicipalityService
      * @param array $data Datos del municipio
      * @return Municipality
      */
-    public function createMunicipality(array $data, UploadedFile $image): Municipality
+    public function createMunicipality(array $data, UploadedFile $image)
     {
         $region = $this->regionRepository->findById($data['region_id']);
         if (!$region) {
@@ -104,8 +112,53 @@ class MunicipalityService
         $imagePath = $this->saveImage($image);
         $data['image'] = $imagePath;
 
-        return $this->municipalityRepository->create($data);
+        $municipality = $this->municipalityRepository->create($data);
+        $data['municipality_id'] = $municipality->id;
+
+        /** TODO: mover esta logica a su propio repository de lenguajes */
+        $spanish = Language::where('code', 'es')
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $data['language_id'] = $spanish->id;
+
+        $this->municipalityTranslationRepository->create($data);
+
+        $this->translateMunicipality($data);
+
+        return $this->municipalityRepository->findById($municipality->id);
     }
+
+    /**
+     * Guardar traducciones del municipio en los idiomas activos excepto español
+     * 
+     * @param array $data Datos del municipio
+     * @return void
+     */
+    protected function translateMunicipality(array $data): void
+    {
+        /** TODO: mover esta logia a su propio repository de lenguajes */
+        $languages = Language::where('is_active', true)
+            ->where('id', '!=', $data['language_id'])
+            ->get();
+
+        foreach ($languages as $language) {
+            $translated = $this->translationService->translateBatch([
+                'short_description' => $data['short_description'],
+                'long_description' => $data['long_description'],
+                'address' => $data['address'],
+            ], $language->name);
+
+            $this->municipalityTranslationRepository->create([
+                'municipality_id' => $data['municipality_id'],
+                'language_id' => $language->id,
+                'short_description' => $translated['short_description'],
+                'long_description' => $translated['long_description'],
+                'address' => $translated['address'],
+            ]);
+        }
+    }
+
 
     /**
      * Actualizar un municipio existente
