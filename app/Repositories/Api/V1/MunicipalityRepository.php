@@ -70,12 +70,24 @@ class MunicipalityRepository
      * Incluye la información de su región y sus comunidades.
      *
      * @param int $id Identificador único del municipio.
+     * @param string|null $languageCode Código del idioma (opcional)
      * @return Municipality|null Instancia del municipio o null si no existe.
      */
-    public function findById(int $id): ?Municipality
+    public function findById(int $id, ?string $languageCode = null): ?Municipality
     {
-        return Municipality::with(['region', 'communities'])
-            ->find($id);
+        $query = Municipality::with(['region', 'communities']);
+
+        if ($languageCode) {
+            $query->with(['translation' => function ($q) use ($languageCode) {
+                $q->whereHas('language', function ($query) use ($languageCode) {
+                    $query->where('code', $languageCode);
+                })->with('language');
+            }]);
+        } else {
+            $query->with(['translations.language']);
+        }
+
+        return $query->find($id);
     }
 
     /**

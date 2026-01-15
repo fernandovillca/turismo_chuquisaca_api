@@ -70,11 +70,12 @@ class MunicipalityService
      * Obtener un municipio por su ID
      *
      * @param int $id ID del municipio
+     * @param string|null $languageCode Código del idioma (opcional)
      * @return Municipality|null
      */
-    public function getMunicipalityById(int $id): ?Municipality
+    public function getMunicipalityById(int $id, ?string $languageCode = null): ?Municipality
     {
-        $municipality = $this->municipalityRepository->findById($id);
+        $municipality = $this->municipalityRepository->findById($id, $languageCode);
 
         if (!$municipality) {
             throw new Exception("El municipio con ID {$id} no existe", 404);

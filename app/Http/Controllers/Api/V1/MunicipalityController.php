@@ -71,11 +71,13 @@ class MunicipalityController extends Controller
         }
     }
 
-    public function show(string $id)
+    public function show(Request $request, int $id)
     {
         try {
+            $languageCode = $request->query('locale');
+
             $municipality = $this->municipalityService
-                ->getMunicipalityById($id);
+                ->getMunicipalityById($id, $languageCode);
 
             return (new MunicipalityResource($municipality))
                 ->additional([
