@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Language;
 use App\Models\Municipality;
 use App\Models\Region;
 use Illuminate\Database\Seeder;
@@ -12,6 +13,8 @@ class MunicipalitySeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create('es_ES');
+
+        $spanish = Language::where('code', 'es')->first();
 
         $regions = [
             'norte' => [
@@ -46,17 +49,24 @@ class MunicipalitySeeder extends Seeder
             }
 
             foreach ($municipalities as $municipalityName) {
-                Municipality::create([
+                // Crear municipio (sin campos traducibles)
+                $municipality = Municipality::create([
                     'region_id' => $region->id,
                     'name' => $municipalityName,
-                    'short_description' => $faker->sentence(6),
-                    'long_description' => $faker->paragraph(3),
                     'latitud' => $faker->latitude(-22, -18),
                     'longitud' => $faker->longitude(-66, -62),
-                    'address' => $faker->address(),
                     'image' => 'images/municipalities/default.jpg',
                     'is_active' => true,
                 ]);
+
+                if ($spanish) {
+                    $municipality->translations()->create([
+                        'language_id' => $spanish->id,
+                        'short_description' => $faker->sentence(6),
+                        'long_description' => $faker->paragraph(3),
+                        'address' => $faker->address(),
+                    ]);
+                }
             }
         }
     }
