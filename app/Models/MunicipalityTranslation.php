@@ -10,16 +10,10 @@ class MunicipalityTranslation extends Model
     protected $fillable = [
         'municipality_id',
         'language_id',
-        'name',
         'short_description',
         'long_description',
         'address'
     ];
-
-    protected function setNameAttribute($value): void
-    {
-        $this->attributes['name'] = strtolower($value);
-    }
 
     /**
      * Relación: Una traducción pertenece a un municipio

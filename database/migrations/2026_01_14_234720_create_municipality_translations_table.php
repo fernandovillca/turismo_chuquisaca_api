@@ -19,9 +19,6 @@ return new class extends Migration
                 ->constrained('languages')
                 ->onDelete('cascade');
 
-            $table->string('name', 100)
-                ->unique();
-
             $table->string('short_description', 200);
 
             $table->text('long_description')
@@ -34,8 +31,6 @@ return new class extends Migration
             $table->unique(['municipality_id', 'language_id']);
 
             $table->index('language_id');
-
-            $table->index('name');
         });
     }
 

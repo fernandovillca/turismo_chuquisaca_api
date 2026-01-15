@@ -10,6 +10,7 @@ class Municipality extends Model
 {
     protected $fillable = [
         'region_id',
+        'name',
         'latitud',
         'longitud',
         'image',
@@ -22,6 +23,11 @@ class Municipality extends Model
         'latitud' => 'decimal:8',
         'longitud' => 'decimal:8',
     ];
+
+    protected function setNameAttribute($value): void
+    {
+        $this->attributes['name'] = strtolower($value);
+    }
 
     /**
      * Relación: Un municipio pertenece a una región
