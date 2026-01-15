@@ -98,17 +98,16 @@ class MunicipalityRepository
      */
     public function create(array $data): Municipality
     {
-        return Municipality::create([
+        $municipality = Municipality::create([
             'region_id' => $data['region_id'],
             'name' => $data['name'],
-            'short_description' => $data['short_description'],
-            'long_description' => $data['long_description'] ?? null,
             'latitud' => $data['latitud'],
             'longitud' => $data['longitud'],
-            'address' => $data['address'],
             'image' => $data['image'],
             'is_active' => true,
         ]);
+
+        return $municipality;
     }
 
     /**
