@@ -58,7 +58,7 @@ class MunicipalityController extends Controller
             $data = $request->except('image');
             $image = $request->file('image');
 
-            $municipality = $this->municipalityService->createMunicipality($data, $image);;
+            $municipality = $this->municipalityService->createMunicipality($data, $image);
             return (new MunicipalityResource($municipality))
                 ->additional([
                     'message' => 'Municipio creado exitosamente',
@@ -66,6 +66,12 @@ class MunicipalityController extends Controller
                 ])
                 ->response()
                 ->setStatusCode(201);
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo  crear el municipio en la base de datos',
+                500
+            );
         } catch (Exception $e) {
             return ApiResponse::error('Error al crear el municipio', $e->getMessage(), 500);
         }
