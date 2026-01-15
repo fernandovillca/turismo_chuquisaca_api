@@ -4,40 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Municipality extends Model
 {
     protected $fillable = [
         'region_id',
-        'name',
-        'short_description',
-        'long_description',
         'latitud',
         'longitud',
-        'address',
         'image',
-        'is_active'
+        'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'region_id' => 'integer'
+        'region_id' => 'integer',
+        'latitud' => 'decimal:8',
+        'longitud' => 'decimal:8',
     ];
-
-    protected function setNameAttribute($value): void
-    {
-        $this->attributes['name'] = strtolower($value);
-    }
-
-    protected function setShortDescriptionAttribute($value): void
-    {
-        $this->attributes['short_description'] = strtolower($value);
-    }
-
-    protected function setLongDescriptionAttribute($value): void
-    {
-        $this->attributes['long_description'] = $value ? strtolower($value) : null;
-    }
 
     /**
      * Relación: Un municipio pertenece a una región
@@ -53,5 +37,24 @@ class Municipality extends Model
     public function communities()
     {
         return $this->hasMany(Community::class);
+    }
+
+    /**
+     * Relación: Un municipio tiene muchas traducciones
+     */
+    public function translations(): HasMany
+    {
+        return $this->hasMany(MunicipalityTranslation::class);
+    }
+
+    /**
+     * Relación: Obtener traducción por código de idioma
+     */
+    public function translation(string $languageCode = 'es')
+    {
+        return $this->hasOne(MunicipalityTranslation::class)
+            ->whereHas('language', function ($query) use ($languageCode) {
+                $query->where('code', $languageCode);
+            });
     }
 }

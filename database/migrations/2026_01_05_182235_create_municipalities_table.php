@@ -15,18 +15,8 @@ return new class extends Migration
                 ->constrained('regions')
                 ->onDelete('cascade');
 
-            $table->string('name', 100)
-                ->unique();
-
-            $table->string('short_description', 200);
-
-            $table->text('long_description')
-                ->nullable();
-
             $table->decimal('latitud', 10, 8);
             $table->decimal('longitud', 10, 8);
-
-            $table->string('address', 150);
 
             $table->string('image');
 
