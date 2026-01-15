@@ -31,11 +31,12 @@ class MunicipalityService
      * Obtener todos los municipios paginados
      *
      * @param int $perPage Cantidad de registros por página
+     * @param string|null $languageCode Código del idioma (opcional)
      * @return LengthAwarePaginator
      */
-    public function getAllMunicipalities(int $perPage = 10): LengthAwarePaginator
+    public function getAllMunicipalities(int $perPage = 10, ?string $languageCode = null): LengthAwarePaginator
     {
-        return $this->municipalityRepository->getAllPaginated($perPage);
+        return $this->municipalityRepository->getAllPaginated($perPage, $languageCode);
     }
 
     /**

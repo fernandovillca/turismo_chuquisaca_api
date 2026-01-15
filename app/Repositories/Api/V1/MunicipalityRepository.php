@@ -13,12 +13,27 @@ class MunicipalityRepository
      * Cada municipio incluye la información de su región y sus comunidades.
      *
      * @param int $perPage Cantidad de registros por página.
+     * @param string|null $languageCode Código del idioma (opcional)
      * @return LengthAwarePaginator Municipios paginados.
      */
-    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
+    public function getAllPaginated(int $perPage = 10, ?string $languageCode = null): LengthAwarePaginator
     {
-        return Municipality::with(['region', 'communities'])
-            ->paginate($perPage);
+        $query = Municipality::with(['region', 'communities']);
+
+        if ($languageCode) {
+            $query->with(['translation' => function ($q) use ($languageCode) {
+                $q->whereHas('language', function ($query) use ($languageCode) {
+                    $query->where('code', $languageCode);
+                })->with('language');
+            }]);
+        } else {
+            $query->with(['translations.language']);
+        }
+
+        return $query->paginate($perPage);
+
+        // return Municipality::with(['region', 'communities'])
+        //     ->paginate($perPage);
     }
 
     /**

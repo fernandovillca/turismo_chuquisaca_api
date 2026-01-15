@@ -26,10 +26,11 @@ class MunicipalityController extends Controller
     {
         try {
             $perPage = min($request->query('per_page', 10), 100);
+            $languageCode = $request->query('locale');
 
             $municipalities = $request->boolean('is_active')
                 ? $this->municipalityService->getActiveMunicipalities($perPage)
-                : $this->municipalityService->getAllMunicipalities($perPage);
+                : $this->municipalityService->getAllMunicipalities($perPage, $languageCode);
 
             return (new MunicipalityCollection($municipalities))
                 ->additional([
