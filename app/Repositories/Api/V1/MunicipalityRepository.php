@@ -122,11 +122,8 @@ class MunicipalityRepository
         $municipality->update([
             'region_id' => $data['region_id'] ?? $municipality->region_id,
             'name' => $data['name'] ?? $municipality->name,
-            'short_description' => $data['short_description'] ?? $municipality->short_description,
-            'long_description' => $data['long_description'] ?? $municipality->long_description,
             'latitud' => $data['latitud'] ?? $municipality->latitud,
             'longitud' => $data['longitud'] ?? $municipality->longitud,
-            'address' => $data['address'] ?? $municipality->address,
             'image' => $data['image'] ?? $municipality->image,
         ]);
 
