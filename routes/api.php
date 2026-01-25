@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CommunityController;
+use App\Http\Controllers\Api\V1\LanguageController;
 use App\Http\Controllers\Api\V1\MunicipalityController;
 use App\Http\Controllers\Api\V1\RegionController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,7 @@ Route::prefix('v1')->group(function () {
     Route::get('municipalities/{id}', [MunicipalityController::class, 'show']);
     Route::get('communities', [CommunityController::class, 'index']);
     Route::get('communities/{id}', [CommunityController::class, 'show']);
+    Route::get('languages', [LanguageController::class, 'index']);
 
     /** ##### Rutas protegidas ##### */
     /** ##### Acceso solo permitido para el administrador ##### */
