@@ -55,5 +55,8 @@ Route::prefix('v1')->group(function () {
         Route::put('communities/{id}', [CommunityController::class, 'update']);
         Route::delete('communities/{id}', [CommunityController::class, 'destroy']);
         Route::patch('communities/{id}/status', [CommunityController::class, 'toggleStatus']);
+
+        /** ##### Rutas para idiomas ##### */
+        Route::post('languages', [LanguageController::class, 'store']);
     });
 });

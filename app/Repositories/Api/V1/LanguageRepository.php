@@ -39,6 +39,7 @@ class LanguageRepository
         return Language::create([
             'code' => $data['code'],
             'name' => $data['name'],
+            'translate_automatically' => $data['translate_automatically'],
             'is_active' => true,
         ]);
     }
