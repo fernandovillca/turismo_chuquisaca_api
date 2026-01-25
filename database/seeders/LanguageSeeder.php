@@ -14,16 +14,19 @@ class LanguageSeeder extends Seeder
                 'code' => 'es',
                 'name' => 'Español',
                 'is_active' => true,
+                'translate_automatically' => false,
             ],
             [
                 'code' => 'en',
                 'name' => 'English',
                 'is_active' => true,
+                'translate_automatically' => true,
             ],
             [
                 'code' => 'qu',
                 'name' => 'Quechua',
                 'is_active' => true,
+                'translate_automatically' => false,
             ],
         ];
 

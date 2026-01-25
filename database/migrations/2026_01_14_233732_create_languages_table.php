@@ -17,6 +17,9 @@ return new class extends Migration
             $table->string('name', 50)
                 ->unique();
 
+            $table->boolean('translate_automatically')
+                ->default(false);
+
             $table->boolean('is_active')
                 ->default(true);
 
