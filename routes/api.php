@@ -43,6 +43,10 @@ Route::prefix('v1')->group(function () {
         Route::post('municipalities/{id}', [MunicipalityController::class, 'update']);
         Route::delete('municipalities/{id}', [MunicipalityController::class, 'destroy']);
         Route::patch('municipalities/{id}/status', [MunicipalityController::class, 'toggleStatus']);
+        Route::patch(
+            'municipalities/{id}/translations/{languageCode}',
+            [MunicipalityController::class, 'updateTranslation']
+        );
 
         /** ##### Rutas para comunidades ##### */
         Route::post('communities', [CommunityController::class, 'store']);

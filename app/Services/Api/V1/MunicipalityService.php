@@ -199,6 +199,55 @@ class MunicipalityService
     }
 
     /**
+     * Actualizar o crear traducción de un municipio en un idioma específico
+     *
+     * @param int $municipalityId Identificador del municipio
+     * @param string $languageCode Código del idioma (en, fr, qu)
+     * @param array $translationData Datos de la traducción
+     * @return Municipality
+     */
+    public function updateMunicipalityTranslation(
+        int $municipalityId,
+        string $languageCode,
+        array $translationData
+    ): Municipality {
+        $language = Language::where('code', $languageCode)
+            ->where('is_active', true)
+            ->first();
+        if (!$language) {
+            throw new Exception("El idioma con el codigo '{$languageCode}' no existe o no está activo", 404);
+        }
+
+        $municipality = $this->municipalityRepository->findById($municipalityId);
+        if (!$municipality) {
+            throw new Exception("El municipio con ID {$municipalityId} no existe", 404);
+        }
+
+        $translationExists = $this->municipalityTranslationRepository->translationExists(
+            $municipalityId,
+            $language->id
+        );
+
+        if ($translationExists) {
+            $this->municipalityTranslationRepository->updateExistingTranslation(
+                $municipality->id,
+                $language->id,
+                $translationData
+            );
+        } else {
+            $this->municipalityTranslationRepository->create([
+                'municipality_id' => $municipality->id,
+                'language_id' => $language->id,
+                'short_description' => $translationData['short_description'],
+                'long_description' => $translationData['long_description'] ?? null,
+                'address' => $translationData['address'],
+            ]);
+        }
+
+        return $municipality->fresh(['region', 'communities', 'translations.language']);
+    }
+
+    /**
      * Eliminar un municipio
      *
      * @param Municipality $municipality Instancia del municipio a eliminar

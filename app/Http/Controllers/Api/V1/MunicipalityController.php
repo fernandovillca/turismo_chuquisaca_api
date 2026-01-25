@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Helpers\ApiResponse;
 use App\Http\Requests\Api\V1\StoreMunicipalityRequest;
 use App\Http\Requests\Api\V1\UpdateMunicipalityRequest;
+use App\Http\Requests\Api\V1\UpdateMunicipalityTranslationRequest;
 use App\Http\Resources\Api\V1\MunicipalityCollection;
 use App\Http\Resources\Api\V1\MunicipalityResource;
 use App\Services\Api\V1\MunicipalityService;
@@ -179,6 +180,39 @@ class MunicipalityController extends Controller
         } catch (Exception $e) {
             return ApiResponse::error(
                 'Error al actualizar el estado del municipio',
+                $e->getMessage(),
+                $e->getCode() ?: 500
+            );
+        }
+    }
+
+    public function updateTranslation(
+        UpdateMunicipalityTranslationRequest $request,
+        int $id,
+        string $languageCode
+    ) {
+        try {
+            $updatedMunicipality = $this->municipalityService->updateMunicipalityTranslation(
+                $id,
+                $languageCode,
+                $request->validated()
+            );
+
+            return (new MunicipalityResource($updatedMunicipality))
+                ->additional([
+                    'message' => 'Traducción del municipio actualizada exitosamente',
+                    'language' => $languageCode,
+                    'status_code' => 200
+                ]);
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo actualizar la traducción del municipio en la base de datos',
+                500
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error(
+                'Error al actualizar la traducción',
                 $e->getMessage(),
                 $e->getCode() ?: 500
             );
