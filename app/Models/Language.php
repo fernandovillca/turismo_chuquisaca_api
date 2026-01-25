@@ -9,10 +9,12 @@ class Language extends Model
     protected $fillable = [
         'code',
         'name',
+        'translate_automatically',
         'is_active'
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'translate_automatically' => 'boolean',
     ];
 }
