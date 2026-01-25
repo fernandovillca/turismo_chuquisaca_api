@@ -56,7 +56,7 @@ class LanguageRepository
         $language->update([
             'code' => $data['code'] ?? $language->code,
             'name' => $data['name'] ?? $language->name,
-            'is_active' => $data['is_active'] ?? $language->is_active,
+            'translate_automatically' => $data['translate_automatically'] ?? $language->translate_automatically,
         ]);
 
         return $language->fresh();

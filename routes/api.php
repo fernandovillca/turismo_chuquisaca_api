@@ -58,5 +58,6 @@ Route::prefix('v1')->group(function () {
 
         /** ##### Rutas para idiomas ##### */
         Route::post('languages', [LanguageController::class, 'store']);
+        Route::put('languages/{id}', [LanguageController::class, 'update']);
     });
 });
