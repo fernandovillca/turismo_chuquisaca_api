@@ -82,7 +82,7 @@ class LanguageService
         }
 
         if ($language->code === 'es') {
-            throw new Exception('No se puede desactivar el idioma español porque es el idioma por defecto');
+            throw new Exception('No se puede desactivar el idioma español porque es el idioma por defecto', 400);
         }
 
         $updatedLanguage = $this->languageRepository->toggleActive($language);
