@@ -64,5 +64,6 @@ Route::prefix('v1')->group(function () {
 
         /** ##### Rutas para subir imágenes ##### */
         Route::post('municipalities/{id}/images', [ImageController::class, 'storeMunicipality']);
+        Route::delete('images/{id}', [ImageController::class, 'destroy']);
     });
 });

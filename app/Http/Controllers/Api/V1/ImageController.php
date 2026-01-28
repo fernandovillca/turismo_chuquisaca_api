@@ -52,4 +52,28 @@ class ImageController extends Controller
             return ApiResponse::error('Error al agregar la imagen', $e->getMessage(), 500);
         }
     }
+
+    public function destroy(int $id): JsonResponse
+    {
+        try {
+            $this->imageService->deleteImageById($id);
+
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Imagen eliminada correctamente'
+            ]);
+        } catch (QueryException $e) {
+            return ApiResponse::error(
+                'Error de base de datos',
+                'No se pudo eliminar la imagen en la base de datos',
+                500
+            );
+        } catch (Exception $e) {
+            return ApiResponse::error(
+                'Error al eliminar la imagen',
+                $e->getMessage(),
+                $e->getCode() ?: 500
+            );
+        }
+    }
 }
