@@ -51,6 +51,13 @@ class MunicipalityResource extends JsonResource
                     'is_active' => $municipality->is_active,
                 ];
             }),
+            'images' => $this->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'url' => url($image->path),
+                    'alt_text' => $image->alt_text,
+                ];
+            }),
         ];
     }
 
@@ -112,6 +119,13 @@ class MunicipalityResource extends JsonResource
                     'id' => $municipality->id,
                     'name' => $municipality->name,
                     'is_active' => $municipality->is_active,
+                ];
+            }),
+            'images' => $this->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'url' => url($image->path),
+                    'alt_text' => $image->alt_text,
                 ];
             }),
         ];

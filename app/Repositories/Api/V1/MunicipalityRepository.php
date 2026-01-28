@@ -18,7 +18,7 @@ class MunicipalityRepository
      */
     public function getAllPaginated(int $perPage = 10, ?string $languageCode = null): LengthAwarePaginator
     {
-        $query = Municipality::with(['region', 'communities']);
+        $query = Municipality::with(['region', 'communities', 'images']);
 
         if ($languageCode) {
             $query->with(['translation' => function ($q) use ($languageCode) {
@@ -45,7 +45,7 @@ class MunicipalityRepository
      */
     public function getAllActivePaginated(int $perPage = 10): LengthAwarePaginator
     {
-        return Municipality::with(['region', 'communities'])
+        return Municipality::with(['region', 'communities', 'images'])
             ->where('is_active', true)
             ->paginate($perPage);
     }
@@ -59,7 +59,7 @@ class MunicipalityRepository
      */
     public function getActiveByRegion(int $regionId): Collection
     {
-        return Municipality::with(['region', 'communities'])
+        return Municipality::with(['region', 'communities', 'images'])
             ->where('region_id', $regionId)
             ->where('is_active', true)
             ->get();
@@ -75,7 +75,7 @@ class MunicipalityRepository
      */
     public function findById(int $id, ?string $languageCode = null): ?Municipality
     {
-        $query = Municipality::with(['region', 'communities']);
+        $query = Municipality::with(['region', 'communities', 'images']);
 
         if ($languageCode) {
             $query->with(['translation' => function ($q) use ($languageCode) {
@@ -127,7 +127,7 @@ class MunicipalityRepository
             'image' => $data['image'] ?? $municipality->image,
         ]);
 
-        return $municipality->fresh(['region', 'communities']);
+        return $municipality->fresh(['region', 'communities', 'images']);
     }
 
     /**
