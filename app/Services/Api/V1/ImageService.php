@@ -58,20 +58,29 @@ class ImageService
     }
 
     /**
-     * Eliminar una imagen
+     * Eliminar una imagen por su ID
      *
-     * @param Image $image
+     * @param int $imageId
      * @return bool
+     * @throws Exception
      */
-    public function deleteImage(Image $image): bool
+    public function deleteImageById(int $imageId): bool
     {
-        return DB::transaction(function () use ($image) {
+        /** * todo: corregir esta linea para evitar la conexion a la base de datos desde aqui */
+        $image = Image::find($imageId);
 
-            $this->deletePhysicalImage($image->path);
+        if (!$image) {
+            throw new Exception("Imagen con ID {$imageId} no encontrada", 404);
+        }
 
-            return $this->imageRepository->delete($image);
-        });
+        $fullPath = public_path($image->path);
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        }
+
+        return $this->imageRepository->delete($image);
     }
+
 
     /**
      * Guardar imagen en el sistema de archivos
@@ -98,18 +107,6 @@ class ImageService
             'Municipality' => 'municipalities',
             default => 'others',
         };
-    }
-
-    /**
-     * Eliminar imagen física
-     */
-    protected function deletePhysicalImage(string $path): void
-    {
-        $fullPath = public_path($path);
-
-        if (file_exists($fullPath)) {
-            unlink($fullPath);
-        }
     }
 
     protected function resolveImageable(string $type, int $id): Model
