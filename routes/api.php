@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CommunityController;
+use App\Http\Controllers\Api\V1\ImageController;
 use App\Http\Controllers\Api\V1\LanguageController;
 use App\Http\Controllers\Api\V1\MunicipalityController;
 use App\Http\Controllers\Api\V1\RegionController;
@@ -60,5 +61,8 @@ Route::prefix('v1')->group(function () {
         Route::post('languages', [LanguageController::class, 'store']);
         Route::put('languages/{id}', [LanguageController::class, 'update']);
         Route::patch('languages/{id}/status', [LanguageController::class, 'toggleStatus']);
+
+        /** ##### Rutas para subir imágenes ##### */
+        Route::post('municipalities/{id}/images', [ImageController::class, 'storeMunicipality']);
     });
 });
