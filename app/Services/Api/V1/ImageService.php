@@ -120,6 +120,7 @@ class ImageService
 
         $modelClass = $this->imageableMap[$type];
 
+        /** * todo: corregir esta linea para evitar la conexion a la base de datos desde aqui */
         $model = $modelClass::find($id);
 
         if (!$model) {
