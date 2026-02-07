@@ -18,6 +18,9 @@ class UpdateMunicipalityRequest extends ApiFormRequest
         return [
             'region_id' => 'sometimes|integer|exists:regions,id',
             'name' => 'sometimes|string|max:100|unique:municipalities,name,' . $municipalityId,
+            'short_description' => 'required|string|max:200',
+            'long_description' => 'nullable|string|max:5000',
+            'address' => 'required|string|max:150',
             'latitud' => 'sometimes|numeric|between:-90,90',
             'longitud' => 'sometimes|numeric|between:-180,180',
             'image' => 'sometimes|image|mimes:jpeg,jpg,png,webp|max:2048',
@@ -30,6 +33,7 @@ class UpdateMunicipalityRequest extends ApiFormRequest
             'region_id.exists' => 'La región seleccionada no existe',
             'name.unique' => 'Ya existe un municipio con ese nombre',
             'name.max' => 'El nombre no puede tener más de 100 caracteres',
+            'short_description.required' => 'La descripción corta es obligatoria',
             'latitud.required' => 'La latitud es obligatoria',
             'latitud.between' => 'La latitud debe estar entre -90 y 90',
             'longitud.required' => 'La longitud es obligatoria',

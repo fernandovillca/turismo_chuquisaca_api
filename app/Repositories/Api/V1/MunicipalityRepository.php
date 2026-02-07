@@ -10,30 +10,15 @@ class MunicipalityRepository
 {
     /**
      * Obtiene todos los municipios paginados.
-     * Cada municipio incluye la información de su región y sus comunidades.
+     * Cada municipio incluye la información de su región, sus comunidades y sus imágenes.
      *
      * @param int $perPage Cantidad de registros por página.
-     * @param string|null $languageCode Código del idioma (opcional)
      * @return LengthAwarePaginator Municipios paginados.
      */
-    public function getAllPaginated(int $perPage = 10, ?string $languageCode = null): LengthAwarePaginator
+    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
     {
-        $query = Municipality::with(['region', 'communities', 'images']);
-
-        if ($languageCode) {
-            $query->with(['translation' => function ($q) use ($languageCode) {
-                $q->whereHas('language', function ($query) use ($languageCode) {
-                    $query->where('code', $languageCode);
-                })->with('language');
-            }]);
-        } else {
-            $query->with(['translations.language']);
-        }
-
-        return $query->paginate($perPage);
-
-        // return Municipality::with(['region', 'communities'])
-        //     ->paginate($perPage);
+        return Municipality::with(['region', 'communities', 'images'])
+            ->paginate($perPage);
     }
 
     /**
@@ -70,24 +55,12 @@ class MunicipalityRepository
      * Incluye la información de su región y sus comunidades.
      *
      * @param int $id Identificador único del municipio.
-     * @param string|null $languageCode Código del idioma (opcional)
      * @return Municipality|null Instancia del municipio o null si no existe.
      */
-    public function findById(int $id, ?string $languageCode = null): ?Municipality
+    public function findById(int $id): ?Municipality
     {
-        $query = Municipality::with(['region', 'communities', 'images']);
-
-        if ($languageCode) {
-            $query->with(['translation' => function ($q) use ($languageCode) {
-                $q->whereHas('language', function ($query) use ($languageCode) {
-                    $query->where('code', $languageCode);
-                })->with('language');
-            }]);
-        } else {
-            $query->with(['translations.language']);
-        }
-
-        return $query->find($id);
+        return Municipality::with(['region', 'communities', 'images'])
+            ->find($id);
     }
 
     /**
@@ -101,6 +74,9 @@ class MunicipalityRepository
         $municipality = Municipality::create([
             'region_id' => $data['region_id'],
             'name' => $data['name'],
+            'short_description' => $data['short_description'],
+            'long_description' => $data['long_description'],
+            'address' => $data['address'],
             'latitud' => $data['latitud'],
             'longitud' => $data['longitud'],
             'image' => $data['image'],
@@ -122,6 +98,9 @@ class MunicipalityRepository
         $municipality->update([
             'region_id' => $data['region_id'] ?? $municipality->region_id,
             'name' => $data['name'] ?? $municipality->name,
+            'short_description' => $data['short_description'] ?? $municipality->short_description,
+            'long_description' => $data['long_description'] ?? $municipality->long_description,
+            'address' => $data['address'] ?? $municipality->address,
             'latitud' => $data['latitud'] ?? $municipality->latitud,
             'longitud' => $data['longitud'] ?? $municipality->longitud,
             'image' => $data['image'] ?? $municipality->image,

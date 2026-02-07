@@ -27,11 +27,10 @@ class MunicipalityController extends Controller
     {
         try {
             $perPage = min($request->query('per_page', 10), 100);
-            $languageCode = $request->query('locale');
 
             $municipalities = $request->boolean('is_active')
                 ? $this->municipalityService->getActiveMunicipalities($perPage)
-                : $this->municipalityService->getAllMunicipalities($perPage, $languageCode);
+                : $this->municipalityService->getAllMunicipalities($perPage);
 
             return (new MunicipalityCollection($municipalities))
                 ->additional([
@@ -78,13 +77,12 @@ class MunicipalityController extends Controller
         }
     }
 
-    public function show(Request $request, int $id)
+    public function show(int $id)
     {
         try {
-            $languageCode = $request->query('locale');
 
             $municipality = $this->municipalityService
-                ->getMunicipalityById($id, $languageCode);
+                ->getMunicipalityById($id);
 
             return (new MunicipalityResource($municipality))
                 ->additional([
@@ -180,39 +178,6 @@ class MunicipalityController extends Controller
         } catch (Exception $e) {
             return ApiResponse::error(
                 'Error al actualizar el estado del municipio',
-                $e->getMessage(),
-                $e->getCode() ?: 500
-            );
-        }
-    }
-
-    public function updateTranslation(
-        UpdateMunicipalityTranslationRequest $request,
-        int $id,
-        string $languageCode
-    ) {
-        try {
-            $updatedMunicipality = $this->municipalityService->updateMunicipalityTranslation(
-                $id,
-                $languageCode,
-                $request->validated()
-            );
-
-            return (new MunicipalityResource($updatedMunicipality))
-                ->additional([
-                    'message' => 'Traducción del municipio actualizada exitosamente',
-                    'language' => $languageCode,
-                    'status_code' => 200
-                ]);
-        } catch (QueryException $e) {
-            return ApiResponse::error(
-                'Error de base de datos',
-                'No se pudo actualizar la traducción del municipio en la base de datos',
-                500
-            );
-        } catch (Exception $e) {
-            return ApiResponse::error(
-                'Error al actualizar la traducción',
                 $e->getMessage(),
                 $e->getCode() ?: 500
             );

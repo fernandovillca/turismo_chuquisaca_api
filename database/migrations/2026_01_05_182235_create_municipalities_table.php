@@ -18,6 +18,13 @@ return new class extends Migration
             $table->string('name', 100)
                 ->unique();
 
+            $table->string('short_description', 200);
+
+            $table->text('long_description')
+                ->nullable();
+
+            $table->string('address', 150);
+
             $table->decimal('latitud', 10, 8);
             $table->decimal('longitud', 10, 8);
 
