@@ -12,6 +12,9 @@ class Municipality extends Model
     protected $fillable = [
         'region_id',
         'name',
+        'short_description',
+        'long_description',
+        'address',
         'latitud',
         'longitud',
         'image',
@@ -49,21 +52,21 @@ class Municipality extends Model
     /**
      * Relación: Un municipio tiene muchas traducciones
      */
-    public function translations(): HasMany
-    {
-        return $this->hasMany(MunicipalityTranslation::class);
-    }
+    // public function translations(): HasMany
+    // {
+    //     return $this->hasMany(MunicipalityTranslation::class);
+    // }
 
     /**
      * Relación: Obtener traducción por código de idioma
      */
-    public function translation(string $languageCode = 'es')
-    {
-        return $this->hasOne(MunicipalityTranslation::class)
-            ->whereHas('language', function ($query) use ($languageCode) {
-                $query->where('code', $languageCode);
-            });
-    }
+    // public function translation(string $languageCode = 'es')
+    // {
+    //     return $this->hasOne(MunicipalityTranslation::class)
+    //         ->whereHas('language', function ($query) use ($languageCode) {
+    //             $query->where('code', $languageCode);
+    //         });
+    // }
 
     /**
      * Relación polimórfica: Un municipio puede tener muchas imágenes

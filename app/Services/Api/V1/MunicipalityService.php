@@ -2,12 +2,10 @@
 
 namespace App\Services\Api\V1;
 
-use App\Models\Language;
 use App\Repositories\Api\V1\MunicipalityRepository;
 use App\Repositories\Api\V1\RegionRepository;
 use App\Models\Municipality;
 use App\Repositories\Api\V1\CommunityRepository;
-use App\Repositories\Api\V1\MunicipalityTranslationRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
@@ -18,33 +16,26 @@ class MunicipalityService
     protected MunicipalityRepository $municipalityRepository;
     protected RegionRepository $regionRepository;
     protected CommunityRepository $communityRepository;
-    protected MunicipalityTranslationRepository $municipalityTranslationRepository;
-    protected TranslationService $translationService;
 
     public function __construct(
         MunicipalityRepository $municipalityRepository,
         RegionRepository $regionRepository,
-        CommunityRepository $communityRepository,
-        MunicipalityTranslationRepository $municipalityTranslationRepository,
-        TranslationService $translationService
+        CommunityRepository $communityRepository
     ) {
         $this->municipalityRepository = $municipalityRepository;
         $this->regionRepository = $regionRepository;
         $this->communityRepository = $communityRepository;
-        $this->municipalityTranslationRepository = $municipalityTranslationRepository;
-        $this->translationService = $translationService;
     }
 
     /**
      * Obtener todos los municipios paginados
      *
      * @param int $perPage Cantidad de registros por página
-     * @param string|null $languageCode Código del idioma (opcional)
      * @return LengthAwarePaginator
      */
-    public function getAllMunicipalities(int $perPage = 10, ?string $languageCode = null): LengthAwarePaginator
+    public function getAllMunicipalities(int $perPage = 10): LengthAwarePaginator
     {
-        return $this->municipalityRepository->getAllPaginated($perPage, $languageCode);
+        return $this->municipalityRepository->getAllPaginated($perPage);
     }
 
     /**
@@ -78,12 +69,11 @@ class MunicipalityService
      * Obtener un municipio por su ID
      *
      * @param int $id ID del municipio
-     * @param string|null $languageCode Código del idioma (opcional)
      * @return Municipality|null
      */
-    public function getMunicipalityById(int $id, ?string $languageCode = null): ?Municipality
+    public function getMunicipalityById(int $id): ?Municipality
     {
-        $municipality = $this->municipalityRepository->findById($id, $languageCode);
+        $municipality = $this->municipalityRepository->findById($id);
 
         if (!$municipality) {
             throw new Exception("El municipio con ID {$id} no existe", 404);
@@ -112,53 +102,8 @@ class MunicipalityService
         $imagePath = $this->saveImage($image);
         $data['image'] = $imagePath;
 
-        $municipality = $this->municipalityRepository->create($data);
-        $data['municipality_id'] = $municipality->id;
-
-        /** TODO: mover esta logica a su propio repository de lenguajes */
-        $spanish = Language::where('code', 'es')
-            ->where('is_active', true)
-            ->firstOrFail();
-
-        $data['language_id'] = $spanish->id;
-
-        $this->municipalityTranslationRepository->create($data);
-
-        $this->translateMunicipality($data);
-
-        return $this->municipalityRepository->findById($municipality->id);
+        return $this->municipalityRepository->create($data);
     }
-
-    /**
-     * Guardar traducciones del municipio en los idiomas activos excepto español
-     * 
-     * @param array $data Datos del municipio
-     * @return void
-     */
-    protected function translateMunicipality(array $data): void
-    {
-        /** TODO: mover esta logia a su propio repository de lenguajes */
-        $languages = Language::where('is_active', true)
-            ->where('id', '!=', $data['language_id'])
-            ->get();
-
-        foreach ($languages as $language) {
-            $translated = $this->translationService->translateBatch([
-                'short_description' => $data['short_description'],
-                'long_description' => $data['long_description'],
-                'address' => $data['address'],
-            ], $language->name);
-
-            $this->municipalityTranslationRepository->create([
-                'municipality_id' => $data['municipality_id'],
-                'language_id' => $language->id,
-                'short_description' => $translated['short_description'],
-                'long_description' => $translated['long_description'],
-                'address' => $translated['address'],
-            ]);
-        }
-    }
-
 
     /**
      * Actualizar un municipio existente
@@ -196,55 +141,6 @@ class MunicipalityService
         }
 
         return $this->municipalityRepository->update($municipality, $data);
-    }
-
-    /**
-     * Actualizar o crear traducción de un municipio en un idioma específico
-     *
-     * @param int $municipalityId Identificador del municipio
-     * @param string $languageCode Código del idioma (en, fr, qu)
-     * @param array $translationData Datos de la traducción
-     * @return Municipality
-     */
-    public function updateMunicipalityTranslation(
-        int $municipalityId,
-        string $languageCode,
-        array $translationData
-    ): Municipality {
-        $language = Language::where('code', $languageCode)
-            ->where('is_active', true)
-            ->first();
-        if (!$language) {
-            throw new Exception("El idioma con el codigo '{$languageCode}' no existe o no está activo", 404);
-        }
-
-        $municipality = $this->municipalityRepository->findById($municipalityId);
-        if (!$municipality) {
-            throw new Exception("El municipio con ID {$municipalityId} no existe", 404);
-        }
-
-        $translationExists = $this->municipalityTranslationRepository->translationExists(
-            $municipalityId,
-            $language->id
-        );
-
-        if ($translationExists) {
-            $this->municipalityTranslationRepository->updateExistingTranslation(
-                $municipality->id,
-                $language->id,
-                $translationData
-            );
-        } else {
-            $this->municipalityTranslationRepository->create([
-                'municipality_id' => $municipality->id,
-                'language_id' => $language->id,
-                'short_description' => $translationData['short_description'],
-                'long_description' => $translationData['long_description'] ?? null,
-                'address' => $translationData['address'],
-            ]);
-        }
-
-        return $municipality->fresh(['region', 'communities', 'translations.language']);
     }
 
     /**
