@@ -50,6 +50,15 @@ class Municipality extends Model
     }
 
     /**
+     * Relación con CulturalEtiquette
+     * Un municipio puede tener varios códigos culturales
+     */
+    public function culturalEtiquettes()
+    {
+        return $this->hasMany(CulturalEtiquette::class);
+    }
+
+    /**
      * Relación: Un municipio tiene muchas traducciones
      */
     // public function translations(): HasMany

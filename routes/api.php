@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CommunityController;
+use App\Http\Controllers\Api\V1\CulturalEtiquetteController;
 use App\Http\Controllers\Api\V1\ImageController;
 use App\Http\Controllers\Api\V1\LanguageController;
 use App\Http\Controllers\Api\V1\MunicipalityController;
@@ -30,6 +31,13 @@ Route::prefix('v1')->group(function () {
     Route::get('communities', [CommunityController::class, 'index']);
     Route::get('communities/{id}', [CommunityController::class, 'show']);
     Route::get('languages', [LanguageController::class, 'index']);
+
+    Route::get('municipalities/{municipality_id}/cultural-etiquettes', [CulturalEtiquetteController::class, 'index']);
+    Route::post('municipalities/{municipality_id}/cultural-etiquettes', [CulturalEtiquetteController::class, 'store']);
+
+    Route::put('cultural-etiquettes/{id}', [CulturalEtiquetteController::class, 'update']);
+    Route::get('cultural-etiquettes/{id}', [CulturalEtiquetteController::class, 'show']);
+    Route::delete('cultural-etiquettes/{id}', [CulturalEtiquetteController::class, 'destroy']);
 
     /** ##### Rutas protegidas ##### */
     /** ##### Acceso solo permitido para el administrador ##### */
